@@ -9,7 +9,8 @@
         "ConnectScreenMixin",
         "InGameHudMixin",
         "CameraTiltMixin",
-        "PlayerNametagMixin"
+        "PlayerNametagMixin",
+        "PlayerEntityRendererMixin"
     ],
     "injectors": {
         "defaultRequire": 1
