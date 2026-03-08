@@ -8,6 +8,7 @@
         "GameMenuScreenMixin",
         "ConnectScreenMixin",
         "InGameHudMixin",
+        "KeyBindingAccessor",
         "CameraTiltMixin",
         "PlayerNametagMixin",
         "PlayerEntityRendererMixin",

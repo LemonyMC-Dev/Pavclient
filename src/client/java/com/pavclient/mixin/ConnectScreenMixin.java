@@ -94,6 +94,7 @@ public abstract class ConnectScreenMixin extends Screen {
 
         context.drawCenteredTextWithShadow(mc.textRenderer,
                 Text.literal("\u25C6 PavMC \u25C6"), w / 2, h / 2 - 25, 0xFFFFFFFF);
+        context.fill(w / 2 - 120, h / 2 - 14, w / 2 + 120, h / 2 + 16, 0xAA000000);
         context.drawCenteredTextWithShadow(mc.textRenderer,
                 Text.literal("Sunucuya ba\u011flan\u0131l\u0131yor..."), w / 2, h / 2 - 8, 0xFFFFFFFF);
 
@@ -107,7 +108,7 @@ public abstract class ConnectScreenMixin extends Screen {
         int barW = 160;
         int barX = w / 2 - barW / 2;
         int barY = h / 2 + 28;
-        context.fill(barX, barY, barX + barW, barY + 2, 0x33FFFFFF);
+        context.fill(barX, barY, barX + barW, barY + 2, 0x88FFFFFF);
         context.fill(barX, barY, barX + (int)(barW * progress), barY + 2, rgb);
 
         // Butonlari tekrar ciz (background uzerine cizdikten sonra)

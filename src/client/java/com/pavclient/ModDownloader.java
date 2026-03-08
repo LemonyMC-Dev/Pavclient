@@ -66,7 +66,8 @@ public class ModDownloader {
             new ModEntry("yacl", "YetAnotherConfigLib"),
             new ModEntry("zoomify", "Zoomify"),
             new ModEntry("not-enough-animations", "Not Enough Animations"),
-            new ModEntry("entityculling", "Entity Culling")
+            new ModEntry("entityculling", "Entity Culling"),
+            new ModEntry("immediatelyfast", "ImmediatelyFast")
     );
 
     /** Java 22+ gerektiren modlar (Pojav Java 21 kullaniyorsa indirilmez) */
@@ -437,6 +438,7 @@ public class ModDownloader {
                 case "zoomify" -> "zoomify";
                 case "not-enough-animations" -> "notenoughanimations";
                 case "entityculling" -> "entityculling";
+                case "immediatelyfast" -> "immediatelyfast";
                 case "vanilla-rpc" -> "vanillarpc";
                 default -> slug;
             };

@@ -95,9 +95,9 @@ public class ClientSettingsScreen extends Screen {
                 btn -> { cfg.showOwnName = !cfg.showOwnName;
                     btn.setMessage(toggleText("Kendi \u0130smini G\u00f6ster", cfg.showOwnName)); PavConfig.save(); });
 
-        addToggle(cx, y + gap * 4, w, h, "Ger\u00e7ek\u00e7i Hareketler", cfg.realisticAnimations,
-                btn -> { cfg.realisticAnimations = !cfg.realisticAnimations;
-                    btn.setMessage(toggleText("Ger\u00e7ek\u00e7i Hareketler", cfg.realisticAnimations)); PavConfig.save(); });
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap * 4, w, h,
+                Text.literal("Blok Vurgu Detay Ayarları"),
+                btn -> { if (this.client != null) this.client.setScreen(new ModernBlockHighlightScreen(this)); }));
     }
 
     /** Sayfa 1: HUD */
@@ -134,26 +134,21 @@ public class ClientSettingsScreen extends Screen {
 
         // YouTube
         this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap, w, h,
-                Text.literal("\u00a7cYouTube: \u00a7fPavMC"),
-                btn -> {}));
-
-        // Cizgi ayirici (bos buton)
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap * 2, w, h,
-                Text.literal("\u00a78\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"),
+                Text.literal("\u00a7cYouTube: \u00a7fpavmcoffical"),
                 btn -> {}));
 
         // Sunucu
-        this.addDrawableChild(ModernButtonWidget.success(cx - w / 2, y + gap * 3, w, h,
+        this.addDrawableChild(ModernButtonWidget.success(cx - w / 2, y + (int)(gap * 2.5), w, h,
                 Text.literal("\u25c6 " + PavClient.TARGET_SERVER),
                 btn -> {}));
 
         // Developer
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap * 4 + 8, w, h,
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + (int)(gap * 3.5) + 8, w, h,
                 Text.literal("\u00a77Developed by \u00a7fLemonyMC"),
                 btn -> {}));
 
         // Version
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap * 5 + 8, w, h,
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + (int)(gap * 4.5) + 8, w, h,
                 Text.literal("\u00a78v" + PavClient.CLIENT_VERSION),
                 btn -> {}));
     }

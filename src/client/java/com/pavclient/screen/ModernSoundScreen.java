@@ -2,6 +2,7 @@ package com.pavclient.screen;
 
 import com.pavclient.gui.GuiHelper;
 import com.pavclient.gui.ModernButtonWidget;
+import com.pavclient.gui.ModernSliderWidget;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.GameOptions;
@@ -47,25 +48,14 @@ public class ModernSoundScreen extends Screen {
 
     private void addVolumeButton(int cx, int y, int w, int h, String label, SoundCategory category) {
         float vol = this.settings.getSoundVolume(category);
-        int side = 28;
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y, side, h,
-                Text.literal("<"), btn -> {
-                    double newVol = vol - 0.1;
-                    if (newVol < 0.0) newVol = 1.0;
-                    this.settings.getSoundVolumeOption(category).setValue(newVol);
-                    this.settings.write();
-                    init();
-                }));
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2 + side + 2, y, w - side * 2 - 4, h,
-                Text.literal(label + ": " + Math.round(vol * 100) + "%"), b -> {}));
-        this.addDrawableChild(ModernButtonWidget.create(cx + w / 2 - side, y, side, h,
-                Text.literal(">"), btn -> {
-                    double newVol = vol + 0.1;
-                    if (newVol > 1.0) newVol = 0.0;
-                    this.settings.getSoundVolumeOption(category).setValue(newVol);
-                    this.settings.write();
-                    init();
-                }));
+        this.addDrawableChild(new ModernSliderWidget(
+                cx - w / 2, y, w, h,
+                label,
+                0.0, 1.0, 0.01,
+                vol,
+                v -> Math.round(v * 100) + "%",
+                v -> { this.settings.getSoundVolumeOption(category).setValue(v); this.settings.write(); }
+        ));
     }
 
     @Override

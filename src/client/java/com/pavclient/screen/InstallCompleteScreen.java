@@ -37,7 +37,7 @@ public class InstallCompleteScreen extends Screen {
 
         // Mesajlar - net g\u00f6r\u00fcn\u00fcr renkler
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("\u2714 Kurulum Ba\u015far\u0131l\u0131!"), cx, cy - 48, 0xFF00FF88);
+                Text.literal("\u2714 Kurulum Ba\u015far\u0131l\u0131!"), cx, cy - 48, 0xFFFFFFFF);
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("Gerekli modlar ba\u015far\u0131yla indirildi."), cx, cy - 32, 0xFFFFFFFF);
         context.drawCenteredTextWithShadow(this.textRenderer,
@@ -46,7 +46,7 @@ public class InstallCompleteScreen extends Screen {
         // Badge
         String badge = "[ \u0130ndirme Tamamland\u0131 ]";
         int bw = this.textRenderer.getWidth(badge) + 16;
-        context.fill(cx - bw / 2, cy + 4, cx + bw / 2, cy + 18, 0x667C4DFF);
+        context.fill(cx - bw / 2, cy + 4, cx + bw / 2, cy + 18, 0xAA000000);
         GuiHelper.drawBorder(context, cx - bw / 2, cy + 4, bw, 14, 0xAAB388FF);
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal(badge), cx, cy + 7, 0xFFFFFFFF);

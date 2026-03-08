@@ -2,6 +2,7 @@ package com.pavclient.screen;
 
 import com.pavclient.gui.GuiHelper;
 import com.pavclient.gui.ModernButtonWidget;
+import com.pavclient.gui.ModernSliderWidget;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.GameOptions;
@@ -26,9 +27,14 @@ public class ModernMouseScreen extends Screen {
         int h = 22;
         int gap = 28;
 
-        addStepper(cx, y, w, h, "Hassasiyet", String.format("%.2f", settings.getMouseSensitivity().getValue()),
-                () -> { settings.getMouseSensitivity().setValue(Math.max(0.01, settings.getMouseSensitivity().getValue() - 0.05)); settings.write(); init(); },
-                () -> { settings.getMouseSensitivity().setValue(Math.min(2.0, settings.getMouseSensitivity().getValue() + 0.05)); settings.write(); init(); });
+        this.addDrawableChild(new ModernSliderWidget(
+                cx - w / 2, y, w, h,
+                "Hassasiyet",
+                0.01, 2.0, 0.01,
+                settings.getMouseSensitivity().getValue(),
+                v -> String.format("%.2f", v),
+                v -> { settings.getMouseSensitivity().setValue(v); settings.write(); }
+        ));
 
         boolean invert = settings.getInvertYMouse().getValue();
         this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap, w, h,
@@ -45,20 +51,17 @@ public class ModernMouseScreen extends Screen {
                 Text.literal("Kesikli Kaydırma: " + (discrete ? "§aAÇIK" : "§cKAPALI")),
                 btn -> { settings.getDiscreteMouseScroll().setValue(!discrete); settings.write(); init(); }));
 
-        addStepper(cx, y + gap * 4, w, h, "Tekerlek Hassasiyeti", String.format("%.2f", settings.getMouseWheelSensitivity().getValue()),
-                () -> { settings.getMouseWheelSensitivity().setValue(Math.max(0.01, settings.getMouseWheelSensitivity().getValue() - 0.1)); settings.write(); init(); },
-                () -> { settings.getMouseWheelSensitivity().setValue(Math.min(10.0, settings.getMouseWheelSensitivity().getValue() + 0.1)); settings.write(); init(); });
+        this.addDrawableChild(new ModernSliderWidget(
+                cx - w / 2, y + gap * 4, w, h,
+                "Tekerlek Hassasiyeti",
+                0.01, 10.0, 0.01,
+                settings.getMouseWheelSensitivity().getValue(),
+                v -> String.format("%.2f", v),
+                v -> { settings.getMouseWheelSensitivity().setValue(v); settings.write(); }
+        ));
 
         this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, this.height - 32, w, h,
                 Text.literal("← Geri"), btn -> { if (this.client != null) this.client.setScreen(parent); }));
-    }
-
-    private void addStepper(int cx, int y, int w, int h, String label, String value, Runnable onLeft, Runnable onRight) {
-        int side = 28;
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y, side, h, Text.literal("<"), b -> onLeft.run()));
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2 + side + 2, y, w - side * 2 - 4, h,
-                Text.literal(label + ": " + value), b -> {}));
-        this.addDrawableChild(ModernButtonWidget.create(cx + w / 2 - side, y, side, h, Text.literal(">"), b -> onRight.run()));
     }
 
     @Override

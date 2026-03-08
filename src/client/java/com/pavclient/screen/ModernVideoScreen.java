@@ -2,6 +2,7 @@ package com.pavclient.screen;
 
 import com.pavclient.gui.GuiHelper;
 import com.pavclient.gui.ModernButtonWidget;
+import com.pavclient.gui.ModernSliderWidget;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.GameOptions;
@@ -30,11 +31,16 @@ public class ModernVideoScreen extends Screen {
         int gap = 26;
         int y = 50;
 
-        // Render Mesafesi (< >)
+        // Render Mesafesi
         int rd = settings.getViewDistance().getValue();
-        addStepper(cx, y, bw, bh, "G\u00f6r\u00fc\u015f Mesafesi", String.valueOf(rd),
-                () -> { int nv = rd - 2; if (nv < 2) nv = 32; settings.getViewDistance().setValue(nv); settings.write(); init(); },
-                () -> { int nv = rd + 2; if (nv > 32) nv = 2; settings.getViewDistance().setValue(nv); settings.write(); init(); });
+        this.addDrawableChild(new ModernSliderWidget(
+                cx - bw / 2, y, bw, bh,
+                "G\u00f6r\u00fc\u015f Mesafesi",
+                2, 32, 2,
+                rd,
+                v -> String.valueOf((int) Math.round(v)),
+                v -> { settings.getViewDistance().setValue((int) Math.round(v)); settings.write(); }
+        ));
 
         // Grafik Kalitesi
         GraphicsMode gm = settings.getGraphicsMode().getValue();
@@ -56,25 +62,25 @@ public class ModernVideoScreen extends Screen {
                     init();
                 }));
 
-        // FPS Limiti
+        // FPS Limiti (260 = sınırsız)
         int fps = settings.getMaxFps().getValue();
-        String fpsText = fps >= 260 ? "S\u0131n\u0131rs\u0131z" : String.valueOf(fps);
-        addStepper(cx, y + gap * 2, bw, bh, "FPS Limiti", fpsText,
-                () -> {
-                    int nf = fps - 30;
-                    if (fps >= 260) nf = 240;
-                    if (nf < 30) nf = 260; // sınırsız
-                    settings.getMaxFps().setValue(nf);
-                    settings.write();
-                    init();
+        this.addDrawableChild(new ModernSliderWidget(
+                cx - bw / 2, y + gap * 2, bw, bh,
+                "FPS Limiti",
+                30, 260, 1,
+                fps,
+                v -> {
+                    int iv = (int) Math.round(v);
+                    return iv >= 260 ? "S\u0131n\u0131rs\u0131z" : String.valueOf((iv / 10) * 10);
                 },
-                () -> {
-                    int nf = fps + 30;
-                    if (nf > 260) nf = 260; // sınırsız
-                    settings.getMaxFps().setValue(nf);
+                v -> {
+                    int iv = (int) Math.round(v);
+                    if (iv >= 255) iv = 260;
+                    else iv = Math.max(30, (iv / 10) * 10);
+                    settings.getMaxFps().setValue(iv);
                     settings.write();
-                    init();
-                });
+                }
+        ));
 
         // VSync
         boolean vs = settings.getEnableVsync().getValue();
@@ -99,29 +105,33 @@ public class ModernVideoScreen extends Screen {
 
         // GUI Boyutu
         int gui = settings.getGuiScale().getValue();
-        addStepper(cx, y + gap * 5, bw, bh, "GUI Boyutu", (gui == 0 ? "Otomatik" : String.valueOf(gui)),
-                () -> {
-                    int ng = gui - 1;
-                    if (ng < 0) ng = 4;
-                    settings.getGuiScale().setValue(ng);
-                    if (this.client != null) this.client.onResolutionChanged();
-                    settings.write();
-                    init();
+        this.addDrawableChild(new ModernSliderWidget(
+                cx - bw / 2, y + gap * 5, bw, bh,
+                "GUI Boyutu",
+                0, 4, 1,
+                gui,
+                v -> {
+                    int iv = (int) Math.round(v);
+                    return iv == 0 ? "Otomatik" : String.valueOf(iv);
                 },
-                () -> {
-                    int ng = gui + 1;
-                    if (ng > 4) ng = 0;
-                    settings.getGuiScale().setValue(ng);
+                v -> {
+                    int iv = (int) Math.round(v);
+                    settings.getGuiScale().setValue(iv);
                     if (this.client != null) this.client.onResolutionChanged();
                     settings.write();
-                    init();
-                });
+                }
+        ));
 
         // FOV
         int fov = settings.getFov().getValue();
-        addStepper(cx, y + gap * 6, bw, bh, "FOV", String.valueOf(fov),
-                () -> { int nfov = fov - 5; if (nfov < 30) nfov = 110; settings.getFov().setValue(nfov); settings.write(); init(); },
-                () -> { int nfov = fov + 5; if (nfov > 110) nfov = 30; settings.getFov().setValue(nfov); settings.write(); init(); });
+        this.addDrawableChild(new ModernSliderWidget(
+                cx - bw / 2, y + gap * 6, bw, bh,
+                "FOV",
+                30, 110, 1,
+                fov,
+                v -> String.valueOf((int) Math.round(v)),
+                v -> { settings.getFov().setValue((int) Math.round(v)); settings.write(); }
+        ));
 
         // Bitti
         this.addDrawableChild(ModernButtonWidget.create(
@@ -144,11 +154,4 @@ public class ModernVideoScreen extends Screen {
     @Override
     public boolean shouldCloseOnEsc() { return true; }
 
-    private void addStepper(int cx, int y, int w, int h, String label, String value, Runnable onLeft, Runnable onRight) {
-        int side = 28;
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y, side, h, Text.literal("<"), b -> onLeft.run()));
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2 + side + 2, y, w - side * 2 - 4, h,
-                Text.literal(label + ": " + value), b -> {}));
-        this.addDrawableChild(ModernButtonWidget.create(cx + w / 2 - side, y, side, h, Text.literal(">"), b -> onRight.run()));
-    }
 }

@@ -41,6 +41,7 @@ public class InstallProgressScreen extends Screen {
 
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("PavMC"), cx, cy - 48, 0xFFFFFFFF);
+        context.fill(cx - 125, cy - 28, cx + 125, cy + 12, 0x88000000);
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("Gerekli modlar kuruluyor..."), cx, cy - 24, 0xFFFFFFFF);
         context.drawCenteredTextWithShadow(this.textRenderer,
