@@ -11,14 +11,17 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 
 /**
- * Modern 4 sekmeli Client Ayarlari.
- * Sayfalar: Gorunum | Ozellikler | HUD | Dans
+ * Modern 5 sekmeli Client Ayarlari.
+ * Sayfalar: Gorunum | Ozellikler | HUD | Dans | Modlar
  */
 public class ClientSettingsScreen extends Screen {
 
     private final Screen parent;
     private int currentPage = 0;
-    private static final String[] PAGES = {"G\u00f6r\u00fcn\u00fcm", "\u00d6zellikler", "HUD", "Dans"};
+    private static final String[] PAGES = {"G\u00f6r\u00fcn\u00fcm", "\u00d6zellikler", "HUD", "Dans", "Modlar"};
+
+    /** Tuş atama modunda hangi mod seçili */
+    private String keyBindTarget = null;
 
     public ClientSettingsScreen(Screen parent) {
         super(Text.literal("PavClient Ayarlar\u0131"));
@@ -35,7 +38,7 @@ public class ClientSettingsScreen extends Screen {
         int y0 = 75;
 
         // Yatay tab bar
-        int tabW = 66;
+        int tabW = 54;
         int totalTabW = tabW * PAGES.length;
         int tabStartX = cx - totalTabW / 2;
         for (int i = 0; i < PAGES.length; i++) {
@@ -58,6 +61,7 @@ public class ClientSettingsScreen extends Screen {
             case 1 -> initPageOzellikler(cx, y0, bw, bh, gap, cfg);
             case 2 -> initPageHud(cx, y0, bw, bh, gap, cfg);
             case 3 -> initPageDans(cx, y0, bw, bh, gap);
+            case 4 -> initPageModlar(cx, y0, bw, bh, gap, cfg);
         }
 
         // Geri butonu
@@ -158,6 +162,114 @@ public class ClientSettingsScreen extends Screen {
                 btn -> {}));
     }
 
+    /** Sayfa 4: Modlar - toggle ve tu\u015f atama */
+    private void initPageModlar(int cx, int y, int w, int h, int gap, PavConfig cfg) {
+        int smallGap = 24;
+
+        // Mouse Tweaks
+        addModRow(cx, y, w, h, "Mouse Tweaks", cfg.mouseTweaksEnabled, cfg.mouseTweaksKey,
+                btn -> { cfg.mouseTweaksEnabled = !cfg.mouseTweaksEnabled;
+                    btn.setMessage(toggleText("Mouse Tweaks", cfg.mouseTweaksEnabled)); PavConfig.save(); },
+                "mouseTweaks");
+
+        // AppleSkin
+        addModRow(cx, y + smallGap, w, h, "AppleSkin", cfg.appleSkinEnabled, cfg.appleSkinKey,
+                btn -> { cfg.appleSkinEnabled = !cfg.appleSkinEnabled;
+                    btn.setMessage(toggleText("AppleSkin", cfg.appleSkinEnabled)); PavConfig.save(); },
+                "appleSkin");
+
+        // Chat Heads
+        addModRow(cx, y + smallGap * 2, w, h, "Chat Heads", cfg.chatHeadsEnabled, cfg.chatHeadsKey,
+                btn -> { cfg.chatHeadsEnabled = !cfg.chatHeadsEnabled;
+                    btn.setMessage(toggleText("Chat Heads", cfg.chatHeadsEnabled)); PavConfig.save(); },
+                "chatHeads");
+
+        // 3D Skin Layers
+        addModRow(cx, y + smallGap * 3, w, h, "3D Skin Layers", cfg.skinLayers3dEnabled, cfg.skinLayers3dKey,
+                btn -> { cfg.skinLayers3dEnabled = !cfg.skinLayers3dEnabled;
+                    btn.setMessage(toggleText("3D Skin Layers", cfg.skinLayers3dEnabled)); PavConfig.save(); },
+                "skinLayers3d");
+
+        // Simple Voice Chat
+        addModRow(cx, y + smallGap * 4, w, h, "Voice Chat", cfg.voiceChatEnabled, cfg.voiceChatKey,
+                btn -> { cfg.voiceChatEnabled = !cfg.voiceChatEnabled;
+                    btn.setMessage(toggleText("Voice Chat", cfg.voiceChatEnabled)); PavConfig.save(); },
+                "voiceChat");
+
+        // Zoomify
+        addModRow(cx, y + smallGap * 5, w, h, "Zoomify", cfg.zoomifyEnabled, cfg.zoomifyKey,
+                btn -> { cfg.zoomifyEnabled = !cfg.zoomifyEnabled;
+                    btn.setMessage(toggleText("Zoomify", cfg.zoomifyEnabled)); PavConfig.save(); },
+                "zoomify");
+    }
+
+    /**
+     * Bir mod satiri ekler: [Toggle butonu] [Tus Atama butonu]
+     */
+    private void addModRow(int cx, int y, int w, int h, String label, boolean enabled, String currentKey,
+                           ButtonWidget.PressAction toggleAction, String modId) {
+        int toggleW = w - 80;
+        int keyW = 74;
+
+        // Toggle butonu (sol)
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y, toggleW, h,
+                toggleText(label, enabled), toggleAction));
+
+        // Tu\u015f atama butonu (sa\u011f)
+        String keyLabel = (keyBindTarget != null && keyBindTarget.equals(modId))
+                ? "\u00a7e> ... <" : "[\u00a7b" + currentKey + "\u00a7r]";
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2 + toggleW + 4, y, keyW, h,
+                Text.literal(keyLabel),
+                btn -> {
+                    if (keyBindTarget != null && keyBindTarget.equals(modId)) {
+                        keyBindTarget = null;
+                    } else {
+                        keyBindTarget = modId;
+                    }
+                    init();
+                }));
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyBindTarget != null) {
+            PavConfig cfg = PavConfig.get();
+            String keyName = getKeyName(keyCode);
+            switch (keyBindTarget) {
+                case "mouseTweaks" -> cfg.mouseTweaksKey = keyName;
+                case "appleSkin" -> cfg.appleSkinKey = keyName;
+                case "chatHeads" -> cfg.chatHeadsKey = keyName;
+                case "skinLayers3d" -> cfg.skinLayers3dKey = keyName;
+                case "voiceChat" -> cfg.voiceChatKey = keyName;
+                case "zoomify" -> cfg.zoomifyKey = keyName;
+            }
+            PavConfig.save();
+            keyBindTarget = null;
+            init();
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    private String getKeyName(int keyCode) {
+        return switch (keyCode) {
+            case 256 -> "ESC";
+            case 259 -> "BACKSPACE";
+            case 258 -> "TAB";
+            case 257 -> "ENTER";
+            case 340, 344 -> "SHIFT";
+            case 341, 345 -> "CTRL";
+            case 342, 346 -> "ALT";
+            case 32 -> "SPACE";
+            default -> {
+                if (keyCode >= 65 && keyCode <= 90) yield String.valueOf((char) keyCode);
+                if (keyCode >= 48 && keyCode <= 57) yield String.valueOf((char) keyCode);
+                if (keyCode >= 290 && keyCode <= 301) yield "F" + (keyCode - 289);
+                yield "KEY_" + keyCode;
+            }
+        };
+    }
+
     private void addToggle(int cx, int y, int w, int h, String label, boolean value, ButtonWidget.PressAction action) {
         this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y, w, h, toggleText(label, value), action));
     }
@@ -171,7 +283,7 @@ public class ClientSettingsScreen extends Screen {
         GuiHelper.drawClientBackground(context, this.width, this.height);
         int cx = this.width / 2;
 
-        GuiHelper.drawPanel(context, cx - 145, 18, 290, this.height - 36);
+        GuiHelper.drawPanel(context, cx - 155, 18, 310, this.height - 36);
 
         long ms = System.nanoTime() / 1_000_000L;
         float hue = (ms % 3000) / 3000.0f;

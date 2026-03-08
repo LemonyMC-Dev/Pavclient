@@ -54,7 +54,13 @@ public class ModDownloader {
             new ModEntry("lithium", "Lithium"),
             new ModEntry("ferrite-core", "FerriteCore"),
             new ModEntry("modmenu", "Mod Menu"),
-            new ModEntry("cloth-config", "Cloth Config")
+            new ModEntry("cloth-config", "Cloth Config"),
+            new ModEntry("mouse-tweaks", "Mouse Tweaks"),
+            new ModEntry("appleskin", "AppleSkin"),
+            new ModEntry("chat-heads", "Chat Heads"),
+            new ModEntry("3dskinlayers", "3D Skin Layers"),
+            new ModEntry("simple-voice-chat", "Simple Voice Chat"),
+            new ModEntry("zoomify", "Zoomify")
     );
 
     private final Path modsDir;
@@ -294,6 +300,12 @@ public class ModDownloader {
                 case "ferrite-core" -> "ferritecore";
                 case "cloth-config" -> "cloth-config";
                 case "modmenu" -> "modmenu";
+                case "mouse-tweaks" -> "mousetweaks";
+                case "appleskin" -> "appleskin";
+                case "chat-heads" -> "chat_heads";
+                case "3dskinlayers" -> "skinlayers3d";
+                case "simple-voice-chat" -> "voicechat";
+                case "zoomify" -> "zoomify";
                 default -> slug;
             };
         }

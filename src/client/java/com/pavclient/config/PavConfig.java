@@ -40,6 +40,31 @@ public class PavConfig {
     // === Dans/Emote ===
     public int lastEmote = 0;
 
+    // === Mod Ayarları ===
+    // Mouse Tweaks
+    public boolean mouseTweaksEnabled = true;
+    public String mouseTweaksKey = "Yok";
+
+    // AppleSkin
+    public boolean appleSkinEnabled = true;
+    public String appleSkinKey = "Yok";
+
+    // Chat Heads
+    public boolean chatHeadsEnabled = true;
+    public String chatHeadsKey = "Yok";
+
+    // 3D Skin Layers
+    public boolean skinLayers3dEnabled = true;
+    public String skinLayers3dKey = "Yok";
+
+    // Simple Voice Chat
+    public boolean voiceChatEnabled = true;
+    public String voiceChatKey = "V";
+
+    // Zoomify
+    public boolean zoomifyEnabled = true;
+    public String zoomifyKey = "C";
+
     private PavConfig() {}
 
     public static PavConfig get() {

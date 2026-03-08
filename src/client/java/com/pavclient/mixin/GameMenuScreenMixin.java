@@ -5,7 +5,6 @@ import com.pavclient.gui.GuiHelper;
 import com.pavclient.gui.ModernButtonWidget;
 import com.pavclient.screen.ClientSettingsScreen;
 import com.pavclient.screen.ConfirmQuitScreen;
-import com.pavclient.screen.EmoteScreen;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.GameMenuScreen;
@@ -77,23 +76,16 @@ public abstract class GameMenuScreenMixin extends Screen {
                 btn -> { if (this.client != null) this.client.setScreen(new ClientSettingsScreen(this)); }
         ));
 
-        // "Dans / Emote"
-        this.addDrawableChild(ModernButtonWidget.create(
-                cx - bw / 2, startY + gap * 3, bw, bh,
-                Text.literal("\u266b Dans / Emote"),
-                btn -> { if (this.client != null) this.client.setScreen(new EmoteScreen(this)); }
-        ));
-
         // "Yeniden Baglan" (green)
         this.addDrawableChild(ModernButtonWidget.success(
-                cx - bw / 2, startY + gap * 4, bw, bh,
+                cx - bw / 2, startY + gap * 3, bw, bh,
                 Text.literal("\u21BB Yeniden Ba\u011flan"),
                 btn -> pavclient$reconnect()
         ));
 
         // "Oyunu Kapat" (red, with confirm)
         this.addDrawableChild(ModernButtonWidget.danger(
-                cx - bw / 2, startY + gap * 5, bw, bh,
+                cx - bw / 2, startY + gap * 4, bw, bh,
                 Text.literal("\u2716 Oyunu Kapat"),
                 btn -> { if (this.client != null) this.client.setScreen(new ConfirmQuitScreen(this)); }
         ));
