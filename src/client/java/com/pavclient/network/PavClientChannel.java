@@ -50,17 +50,20 @@ public final class PavClientChannel {
             // Temizle (yeni sunucu)
             PavClientUsers.clear();
 
-            // Kendi ismimizi ekle
-            if (client.player != null) {
+            // Kendi ismimizi ekle - handler uzerinden isim al (client.player null olabilir)
+            String myName = handler.getProfile().getName();
+            if (myName != null && !myName.isEmpty()) {
+                PavClientUsers.addPavUser(myName);
+                LOGGER.info("[PavClient] Added self as PavUser: {}", myName);
+            } else if (client.player != null) {
                 PavClientUsers.addPavUser(client.player.getName().getString());
             }
 
             // Sunucuya hello gonder (sunucu desteklemiyorsa sessizce basarisiz olur)
             try {
-                if (client.player != null) {
-                    ClientPlayNetworking.send(new HelloPayload(client.player.getName().getString()));
-                    LOGGER.info("[PavClient] Sent hello to server");
-                }
+                String name = myName != null ? myName : (client.player != null ? client.player.getName().getString() : "unknown");
+                ClientPlayNetworking.send(new HelloPayload(name));
+                LOGGER.info("[PavClient] Sent hello to server");
             } catch (Exception e) {
                 LOGGER.debug("[PavClient] Server does not support pavclient channel: {}", e.getMessage());
             }

@@ -2,8 +2,14 @@ package com.pavclient.mixin;
 
 import com.pavclient.gui.GuiHelper;
 import com.pavclient.gui.ModernButtonWidget;
+import com.pavclient.screen.ModernAccessibilityScreen;
+import com.pavclient.screen.ModernChatScreen;
+import com.pavclient.screen.ModernControlsScreen;
 import com.pavclient.screen.ModernLanguageScreen;
 import com.pavclient.screen.ModernResourcePackScreen;
+import com.pavclient.screen.ModernSkinScreen;
+import com.pavclient.screen.ModernSoundScreen;
+import com.pavclient.screen.ModernVideoScreen;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
@@ -55,21 +61,21 @@ public abstract class OptionsScreenMixin extends Screen {
         this.addDrawableChild(ModernButtonWidget.create(
                 cx - bw / 2, startY, bw, bh,
                 Text.literal("\u266b Ses Ayarlar\u0131"),
-                btn -> { if (this.client != null) this.client.setScreen(new SoundOptionsScreen(this, this.settings)); }
+                btn -> { if (this.client != null) this.client.setScreen(new ModernSoundScreen(this, this.settings)); }
         ));
 
         // Video Ayarlari
         this.addDrawableChild(ModernButtonWidget.create(
                 cx - bw / 2, startY + gap, bw, bh,
                 Text.literal("\u25a3 Video Ayarlar\u0131"),
-                btn -> { if (this.client != null) this.client.setScreen(new VideoOptionsScreen(this, this.client, this.settings)); }
+                btn -> { if (this.client != null) this.client.setScreen(new ModernVideoScreen(this, this.settings)); }
         ));
 
         // Kontroller
         this.addDrawableChild(ModernButtonWidget.create(
                 cx - bw / 2, startY + gap * 2, bw, bh,
                 Text.literal("\u2328 Kontroller"),
-                btn -> { if (this.client != null) this.client.setScreen(new ControlsOptionsScreen(this, this.settings)); }
+                btn -> { if (this.client != null) this.client.setScreen(new ModernControlsScreen(this, this.settings)); }
         ));
 
         // Dil - Modern sadece TR/EN ekrani
@@ -83,7 +89,7 @@ public abstract class OptionsScreenMixin extends Screen {
         this.addDrawableChild(ModernButtonWidget.create(
                 cx - bw / 2, startY + gap * 4, bw, bh,
                 Text.literal("\u2709 Sohbet Ayarlar\u0131"),
-                btn -> { if (this.client != null) this.client.setScreen(new ChatOptionsScreen(this, this.settings)); }
+                btn -> { if (this.client != null) this.client.setScreen(new ModernChatScreen(this, this.settings)); }
         ));
 
         // Kaynak Paketleri - kaynakpaketleri klasoru
@@ -97,14 +103,14 @@ public abstract class OptionsScreenMixin extends Screen {
         this.addDrawableChild(ModernButtonWidget.create(
                 cx - bw / 2, startY + gap * 6, bw, bh,
                 Text.literal("\u2665 Eri\u015filebilirlik"),
-                btn -> { if (this.client != null) this.client.setScreen(new AccessibilityOptionsScreen(this, this.settings)); }
+                btn -> { if (this.client != null) this.client.setScreen(new ModernAccessibilityScreen(this, this.settings)); }
         ));
 
         // Gorunum Ozellestirme
         this.addDrawableChild(ModernButtonWidget.create(
                 cx - bw / 2, startY + gap * 7, bw, bh,
                 Text.literal("\u263a G\u00f6r\u00fcn\u00fcm \u00d6zelle\u015ftirme"),
-                btn -> { if (this.client != null) this.client.setScreen(new SkinOptionsScreen(this, this.settings)); }
+                btn -> { if (this.client != null) this.client.setScreen(new ModernSkinScreen(this, this.settings)); }
         ));
 
         // Geri

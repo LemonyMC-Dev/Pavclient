@@ -89,20 +89,18 @@ public abstract class ConnectScreenMixin extends Screen {
             }
         }
 
-        // Rainbow PavMC
         long ms = System.nanoTime() / 1_000_000L;
-        float hue = (ms % 3000) / 3000.0f;
-        int rgb = 0xFF000000 | GuiHelper.hsbToRgb(hue, 0.9f, 1.0f);
+        int rgb = 0xFFFFFFFF;
 
         context.drawCenteredTextWithShadow(mc.textRenderer,
-                Text.literal("\u25C6 PavMC \u25C6"), w / 2, h / 2 - 25, rgb);
+                Text.literal("\u25C6 PavMC \u25C6"), w / 2, h / 2 - 25, 0xFFFFFFFF);
         context.drawCenteredTextWithShadow(mc.textRenderer,
                 Text.literal("Sunucuya ba\u011flan\u0131l\u0131yor..."), w / 2, h / 2 - 8, 0xFFFFFFFF);
 
         // Animasyonlu noktalar
         int dots = (int)((ms / 400) % 4);
         context.drawCenteredTextWithShadow(mc.textRenderer,
-                Text.literal(PavClient.TARGET_SERVER + ".".repeat(dots)), w / 2, h / 2 + 8, 0xFF9E9E9E);
+                Text.literal(PavClient.TARGET_SERVER + ".".repeat(dots)), w / 2, h / 2 + 8, 0xFFFFFFFF);
 
         // Progress bar
         float progress = (ms % 1500) / 1500.0f;

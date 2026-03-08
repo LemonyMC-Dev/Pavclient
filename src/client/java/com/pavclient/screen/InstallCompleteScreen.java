@@ -32,12 +32,8 @@ public class InstallCompleteScreen extends Screen {
 
         GuiHelper.drawPanel(context, cx - 180, cy - 85, 360, 175);
 
-        // Rainbow title
-        long ms = System.nanoTime() / 1_000_000L;
-        float hue = (ms % 3000) / 3000.0f;
-        int rgb = 0xFF000000 | GuiHelper.hsbToRgb(hue, 0.9f, 1.0f);
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("\u25C6 PavClient \u25C6"), cx, cy - 72, rgb);
+                Text.literal("\u25C6 PavClient \u25C6"), cx, cy - 72, 0xFFFFFFFF);
 
         // Mesajlar - net g\u00f6r\u00fcn\u00fcr renkler
         context.drawCenteredTextWithShadow(this.textRenderer,
@@ -45,7 +41,7 @@ public class InstallCompleteScreen extends Screen {
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("Gerekli modlar ba\u015far\u0131yla indirildi."), cx, cy - 32, 0xFFFFFFFF);
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("Oyunu yeniden ba\u015flat\u0131n ve tekrar girin."), cx, cy - 18, 0xFFE0E0E0);
+                Text.literal("Oyunu yeniden ba\u015flat\u0131n ve tekrar girin."), cx, cy - 18, 0xFFFFFFFF);
 
         // Badge
         String badge = "[ \u0130ndirme Tamamland\u0131 ]";
@@ -53,10 +49,10 @@ public class InstallCompleteScreen extends Screen {
         context.fill(cx - bw / 2, cy + 4, cx + bw / 2, cy + 18, 0x667C4DFF);
         GuiHelper.drawBorder(context, cx - bw / 2, cy + 4, bw, 14, 0xAAB388FF);
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal(badge), cx, cy + 7, 0xFFE0CFFF);
+                Text.literal(badge), cx, cy + 7, 0xFFFFFFFF);
 
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("v" + PavClient.CLIENT_VERSION), cx, cy + 30, 0x88FFFFFF);
+                Text.literal("v" + PavClient.CLIENT_VERSION), cx, cy + 30, 0xFFFFFFFF);
 
         super.render(context, mouseX, mouseY, delta);
     }

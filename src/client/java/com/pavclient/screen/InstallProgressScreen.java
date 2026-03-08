@@ -37,15 +37,14 @@ public class InstallProgressScreen extends Screen {
         GuiHelper.drawPanel(context, cx - 180, cy - 80, 360, 160);
 
         long ms = System.nanoTime() / 1_000_000L;
-        float hue = (ms % 3000) / 3000.0f;
-        int rgb = 0xFF000000 | GuiHelper.hsbToRgb(hue, 0.9f, 1.0f);
+        int rgb = 0xFFFFFFFF;
 
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("PavMC"), cx, cy - 48, rgb);
+                Text.literal("PavMC"), cx, cy - 48, 0xFFFFFFFF);
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("Gerekli modlar kuruluyor..."), cx, cy - 24, 0xFFFFFFFF);
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("Bu ilk açılışta biraz sürebilir."), cx, cy - 10, 0xFFBDBDBD);
+                Text.literal("Bu ilk açılışta biraz sürebilir."), cx, cy - 10, 0xFFFFFFFF);
 
         float progress = ((ms % 1800) / 1800.0f);
         int barW = 180;
@@ -56,9 +55,9 @@ public class InstallProgressScreen extends Screen {
 
         int dots = (int) ((ms / 400) % 4);
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("İndiriliyor" + ".".repeat(dots)), cx, cy + 24, 0x99FFFFFF);
+                Text.literal("İndiriliyor" + ".".repeat(dots)), cx, cy + 24, 0xFFFFFFFF);
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("v" + PavClient.CLIENT_VERSION), cx, cy + 40, 0x66FFFFFF);
+                Text.literal("v" + PavClient.CLIENT_VERSION), cx, cy + 40, 0xFFFFFFFF);
     }
 
     @Override

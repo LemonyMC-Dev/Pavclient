@@ -32,9 +32,8 @@ public class PlayerNametagMixin {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc == null || mc.player == null) return;
 
-        String playerName = text.getString();
-        String localName = mc.player.getName().getString();
-        boolean isSelf = playerName.equals(localName);
+        String rawName = (state.name != null && !state.name.isEmpty()) ? state.name : text.getString();
+        boolean isSelf = state.id == mc.player.getId();
 
         // Kendi ismini gosterme kapali ise cancel
         if (isSelf && !PavConfig.get().showOwnName) {
@@ -43,14 +42,14 @@ public class PlayerNametagMixin {
         }
 
         // PavClient kullanicilarina \u03c1\u043c | prefix ekle
-        if (PavClientUsers.isPavUser(playerName)) {
+        if (isSelf || PavClientUsers.isPavUser(rawName)) {
             ci.cancel();
 
             // \u03c1\u043c | prefix (yunan rho + kiril em = hos gorunum)
             MutableText prefix = Text.literal("\u03c1\u043c")
                     .setStyle(Style.EMPTY.withColor(0xCB7BEA))
                     .append(Text.literal(" | ").formatted(Formatting.GRAY));
-            MutableText name = Text.literal(playerName).formatted(Formatting.WHITE);
+            MutableText name = Text.literal(rawName).formatted(Formatting.WHITE);
             MutableText fullText = prefix.append(name);
 
             // Vanilla renderlamaya birak ama degistirilmis text ile - EntityRenderer bridge metodunu cagir
