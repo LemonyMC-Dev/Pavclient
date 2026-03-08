@@ -31,6 +31,7 @@ public class InstallCompleteScreen extends Screen {
         int cy = this.height / 2;
 
         GuiHelper.drawPanel(context, cx - 180, cy - 85, 360, 175);
+        context.fill(cx - 150, cy - 54, cx + 150, cy - 10, 0xAA000000);
 
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("\u25C6 PavClient \u25C6"), cx, cy - 72, 0xFFFFFFFF);

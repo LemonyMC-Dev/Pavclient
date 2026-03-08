@@ -95,9 +95,7 @@ public class ClientSettingsScreen extends Screen {
                 btn -> { cfg.showOwnName = !cfg.showOwnName;
                     btn.setMessage(toggleText("Kendi \u0130smini G\u00f6ster", cfg.showOwnName)); PavConfig.save(); });
 
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap * 4, w, h,
-                Text.literal("Blok Vurgu Detay Ayarları"),
-                btn -> { if (this.client != null) this.client.setScreen(new ModernBlockHighlightScreen(this)); }));
+        // Bosluk birak (buyuk ayar butonu kaldirildi)
     }
 
     /** Sayfa 1: HUD */

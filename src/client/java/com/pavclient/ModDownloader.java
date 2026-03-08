@@ -67,7 +67,8 @@ public class ModDownloader {
             new ModEntry("zoomify", "Zoomify"),
             new ModEntry("not-enough-animations", "Not Enough Animations"),
             new ModEntry("entityculling", "Entity Culling"),
-            new ModEntry("immediatelyfast", "ImmediatelyFast")
+            new ModEntry("immediatelyfast", "ImmediatelyFast"),
+            new ModEntry("moreculling", "More Culling")
     );
 
     /** Java 22+ gerektiren modlar (Pojav Java 21 kullaniyorsa indirilmez) */
@@ -439,6 +440,7 @@ public class ModDownloader {
                 case "not-enough-animations" -> "notenoughanimations";
                 case "entityculling" -> "entityculling";
                 case "immediatelyfast" -> "immediatelyfast";
+                case "moreculling" -> "moreculling";
                 case "vanilla-rpc" -> "vanillarpc";
                 default -> slug;
             };

@@ -65,10 +65,6 @@ public class ModernKeybindsScreen extends Screen {
 
         this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, this.height - 32, w, h,
                 Text.literal("← Geri"), btn -> { if (this.client != null) this.client.setScreen(parent); }));
-
-        String info = (scrollOffset + 1) + "-" + Math.min(scrollOffset + maxRows, allBinds.size()) + " / " + allBinds.size();
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, this.height - 56, w, 20,
-                Text.literal("Liste: " + info), btn -> {}));
     }
 
     @Override
@@ -107,6 +103,19 @@ public class ModernKeybindsScreen extends Screen {
         int cx = this.width / 2;
         GuiHelper.drawPanel(context, cx - 140, 14, 280, this.height - 28);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Tuş Atamaları"), cx, 24, 0xFFFFFFFF);
+
+        // Sagda ince kaydirma cubugu
+        int maxRows = Math.max(6, Math.min(16, (this.height - 96) / 22));
+        int total = Math.max(1, allBinds.size());
+        int trackX = cx + 132;
+        int trackY = 44;
+        int trackH = Math.max(40, maxRows * 22 - 2);
+        context.fill(trackX, trackY, trackX + 3, trackY + trackH, 0x44FFFFFF);
+        int thumbH = Math.max(12, (int)((maxRows / (double) total) * trackH));
+        int maxOffset = Math.max(0, total - maxRows);
+        int thumbY = trackY + (maxOffset == 0 ? 0 : (int)((scrollOffset / (double) maxOffset) * (trackH - thumbH)));
+        context.fill(trackX, thumbY, trackX + 3, thumbY + thumbH, 0xCCFFFFFF);
+
         if (waitingBind != null) {
             context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Bir tuşa bas..."), cx, this.height - 52, 0xFFFFFFFF);
         }
