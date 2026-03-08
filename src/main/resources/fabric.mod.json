@@ -1,0 +1,42 @@
+{
+    "schemaVersion": 1,
+    "id": "pavclient",
+    "version": "${version}",
+
+    "name": "PavClient",
+    "description": "PavMC custom client - Automatically connects to oyna.pavmc.com with mod management and multi-version support.",
+    "authors": [
+        "LemonyMC"
+    ],
+    "contact": {
+        "sources": "https://github.com/LemonyMC-Dev/Pavclient"
+    },
+    "license": "All-Rights-Reserved",
+    "icon": "assets/pavclient/icon.png",
+
+    "environment": "*",
+
+    "entrypoints": {
+        "main": [
+            "com.pavclient.PavClient"
+        ],
+        "client": [
+            "com.pavclient.PavClientMod"
+        ]
+    },
+
+    "mixins": [
+        "pavclient.mixins.json",
+        {
+            "config": "pavclient.client.mixins.json",
+            "environment": "client"
+        }
+    ],
+
+    "depends": {
+        "fabricloader": ">=0.16.9",
+        "minecraft": "~1.21.4",
+        "java": ">=21",
+        "fabric-api": "*"
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "required": true,
+    "package": "com.pavclient.mixin",
+    "compatibilityLevel": "JAVA_21",
+    "client": [
+        "TitleScreenMixin",
+        "DisconnectedScreenMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}
