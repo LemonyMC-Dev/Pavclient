@@ -1,6 +1,7 @@
 package com.pavclient.hud;
 
 import com.pavclient.config.PavConfig;
+import com.pavclient.emote.EmoteManager;
 import com.pavclient.gui.GuiHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
@@ -21,12 +22,9 @@ public class HudRenderer implements HudRenderCallback {
         if (cfg.rgbTextEnabled) renderRgbText(context, mc, cfg);
         if (cfg.armorHudEnabled) renderArmorHud(context, mc, cfg);
         if (cfg.customCrosshairEnabled) renderCrosshair(context, mc, cfg);
+        if (EmoteManager.isLocalEmotePlaying()) renderEmoteIndicator(context, mc);
     }
 
-    /**
-     * RGB: System.nanoTime ile her frame farkl\u0131 renk. Asla sabit kalmaz.
-     * Her karakter farkl\u0131 hue offset -> gradient dalga efekti.
-     */
     private void renderRgbText(DrawContext context, MinecraftClient mc, PavConfig cfg) {
         TextRenderer tr = mc.textRenderer;
         String text = "PAVMC 2.SEZON!!";
@@ -40,9 +38,8 @@ public class HudRenderer implements HudRenderCallback {
         float drawX = cfg.rgbX / scale;
         float drawY = (screenH - cfg.rgbY) / scale;
 
-        // nanoTime -> ms çevir, çok hızlı döngü
         long ms = System.nanoTime() / 1_000_000L;
-        float baseHue = (ms % 3000) / 3000.0f; // 3 saniyede tam döngü
+        float baseHue = (ms % 3000) / 3000.0f;
 
         float xOff = 0;
         for (int i = 0; i < text.length(); i++) {
@@ -112,5 +109,25 @@ public class HudRenderer implements HudRenderCallback {
                 context.fill(cx, cy - 4, cx + 1, cy + 5, c);
             }
         }
+    }
+
+    /** Emote oynarken ekranin ustunde gosterge */
+    private void renderEmoteIndicator(DrawContext context, MinecraftClient mc) {
+        int emoteId = EmoteManager.getLocalEmoteId();
+        if (emoteId < 0 || emoteId >= EmoteManager.EMOTE_NAMES.length) return;
+
+        String emoteName = EmoteManager.EMOTE_NAMES[emoteId];
+        int w = mc.getWindow().getScaledWidth();
+
+        long ms = System.nanoTime() / 1_000_000L;
+        float hue = (ms % 2000) / 2000.0f;
+        int rgb = 0xFF000000 | GuiHelper.hsbToRgb(hue, 0.9f, 1.0f);
+
+        // Ust ortada emote ismi
+        int textW = mc.textRenderer.getWidth(emoteName) + 20;
+        int bx = w / 2 - textW / 2;
+        context.fill(bx, 4, bx + textW, 18, 0x88000000);
+        GuiHelper.drawBorder(context, bx, 4, textW, 14, 0x667C4DFF);
+        context.drawCenteredTextWithShadow(mc.textRenderer, Text.literal(emoteName), w / 2, 7, rgb);
     }
 }

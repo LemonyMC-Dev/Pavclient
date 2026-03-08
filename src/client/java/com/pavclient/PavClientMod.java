@@ -1,6 +1,7 @@
 package com.pavclient;
 
 import com.pavclient.config.PavConfig;
+import com.pavclient.emote.EmoteManager;
 import com.pavclient.hud.HudRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
@@ -54,7 +55,10 @@ public class PavClientMod implements ClientModInitializer {
             LOGGER.info("[{}] Started background installer thread: {}", PavClient.MOD_NAME, installerThread.getName());
         }
 
-        // Register HUD renderer (RGB text, armor HUD, custom crosshair)
+        // Emote/dans sistemi
+        EmoteManager.init();
+
+        // Register HUD renderer (RGB text, armor HUD, custom crosshair, emote indicator)
         HudRenderCallback.EVENT.register(new HudRenderer());
 
         LOGGER.info("[{}] Client initialization complete. Target: {}:{}",

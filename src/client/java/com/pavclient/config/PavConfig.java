@@ -15,13 +15,13 @@ public class PavConfig {
     private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("pavclient.json");
     private static PavConfig INSTANCE;
 
-    // === HUD: RGB Yazı ===
+    // === HUD: RGB Yazi ===
     public boolean rgbTextEnabled = true;
     public float rgbScale = 2.0f;
     public int rgbX = 6;
     public int rgbY = 22;
 
-    // === HUD: Zırh ===
+    // === HUD: Zirh ===
     public boolean armorHudEnabled = true;
     public float armorHudScale = 1.0f;
     public int armorHudX = 5;
@@ -32,10 +32,13 @@ public class PavConfig {
     public boolean customCrosshairEnabled = false;
     public int crosshairStyle = 0;
 
-    // === Client Özellikleri ===
+    // === Gorunum ===
     public boolean showOwnName = false;
     public boolean blockHighlight = true;
     public boolean realisticAnimations = false;
+
+    // === Dans/Emote ===
+    public int lastEmote = 0;
 
     private PavConfig() {}
 

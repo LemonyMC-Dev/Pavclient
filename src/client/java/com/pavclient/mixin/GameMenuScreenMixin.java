@@ -5,6 +5,7 @@ import com.pavclient.gui.GuiHelper;
 import com.pavclient.gui.ModernButtonWidget;
 import com.pavclient.screen.ClientSettingsScreen;
 import com.pavclient.screen.ConfirmQuitScreen;
+import com.pavclient.screen.EmoteScreen;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.GameMenuScreen;
@@ -52,10 +53,10 @@ public abstract class GameMenuScreenMixin extends Screen {
         int cx = this.width / 2;
         int bw = 220;
         int bh = 26;
-        int gap = 32;
-        int startY = this.height / 2 - 70;
+        int gap = 30;
+        int startY = this.height / 2 - 88;
 
-        // "Oyuna D\u00f6n"
+        // "Oyuna Don"
         this.addDrawableChild(ModernButtonWidget.create(
                 cx - bw / 2, startY, bw, bh,
                 Text.literal("\u25B6 Oyuna D\u00f6n"),
@@ -69,23 +70,30 @@ public abstract class GameMenuScreenMixin extends Screen {
                 btn -> { if (this.client != null) this.client.setScreen(new OptionsScreen(this, this.client.options)); }
         ));
 
-        // "Client Ayarlar\u0131" (PavClient settings)
+        // "Client Ayarlari" (PavClient settings)
         this.addDrawableChild(ModernButtonWidget.create(
                 cx - bw / 2, startY + gap * 2, bw, bh,
                 Text.literal("\u2726 Client Ayarlar\u0131"),
                 btn -> { if (this.client != null) this.client.setScreen(new ClientSettingsScreen(this)); }
         ));
 
-        // "Yeniden Ba\u011flan" (green)
-        this.addDrawableChild(ModernButtonWidget.success(
+        // "Dans / Emote"
+        this.addDrawableChild(ModernButtonWidget.create(
                 cx - bw / 2, startY + gap * 3, bw, bh,
+                Text.literal("\u266b Dans / Emote"),
+                btn -> { if (this.client != null) this.client.setScreen(new EmoteScreen(this)); }
+        ));
+
+        // "Yeniden Baglan" (green)
+        this.addDrawableChild(ModernButtonWidget.success(
+                cx - bw / 2, startY + gap * 4, bw, bh,
                 Text.literal("\u21BB Yeniden Ba\u011flan"),
                 btn -> pavclient$reconnect()
         ));
 
         // "Oyunu Kapat" (red, with confirm)
         this.addDrawableChild(ModernButtonWidget.danger(
-                cx - bw / 2, startY + gap * 4, bw, bh,
+                cx - bw / 2, startY + gap * 5, bw, bh,
                 Text.literal("\u2716 Oyunu Kapat"),
                 btn -> { if (this.client != null) this.client.setScreen(new ConfirmQuitScreen(this)); }
         ));

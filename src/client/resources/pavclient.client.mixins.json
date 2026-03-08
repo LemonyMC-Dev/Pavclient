@@ -8,7 +8,9 @@
         "GameMenuScreenMixin",
         "ConnectScreenMixin",
         "SplashOverlayMixin",
-        "InGameHudMixin"
+        "InGameHudMixin",
+        "CameraTiltMixin",
+        "PlayerNametagMixin"
     ],
     "injectors": {
         "defaultRequire": 1
