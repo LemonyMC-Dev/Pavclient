@@ -4,7 +4,8 @@
     "compatibilityLevel": "JAVA_21",
     "client": [
         "TitleScreenMixin",
-        "DisconnectedScreenMixin"
+        "DisconnectedScreenMixin",
+        "GameMenuScreenMixin"
     ],
     "injectors": {
         "defaultRequire": 1

@@ -1,23 +1,20 @@
 package com.pavclient.screen;
 
 import com.pavclient.PavClient;
+import com.pavclient.gui.GuiHelper;
+import com.pavclient.gui.ModernButtonWidget;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 
 /**
  * Custom connection failed screen for PavClient.
- *
- * Displays only two options when connection to oyna.pavmc.com fails:
- * 1. "Tekrar Dene" (Retry) - Attempts to reconnect to the server
- * 2. "Oyunu Kapat" (Close Game) - Immediately shuts down the game
- *
- * No main menu or other navigation is available.
+ * Only two options:
+ * 1. "Yeniden Baglan" (Retry) - green button
+ * 2. "Oyunu Kapat" (Close Game) - red button, with confirmation
  */
 public class ConnectionFailedScreen extends Screen {
 
@@ -30,110 +27,68 @@ public class ConnectionFailedScreen extends Screen {
 
     @Override
     protected void init() {
-        int buttonWidth = 200;
-        int buttonHeight = 20;
-        int centerX = this.width / 2 - buttonWidth / 2;
+        int centerX = this.width / 2;
         int centerY = this.height / 2;
 
-        // "Tekrar Dene" (Retry) button
-        this.addDrawableChild(ButtonWidget.builder(
-                Text.literal("Tekrar Dene").formatted(Formatting.GREEN),
+        // "Yeniden Baglan" (Retry) - success green
+        this.addDrawableChild(ModernButtonWidget.success(
+                centerX - 100, centerY + 15, 200, 25,
+                Text.literal("Yeniden Baglan"),
                 button -> reconnect()
-        ).dimensions(centerX, centerY + 10, buttonWidth, buttonHeight).build());
+        ));
 
-        // "Oyunu Kapat" (Close Game) button
-        this.addDrawableChild(ButtonWidget.builder(
-                Text.literal("Oyunu Kapat").formatted(Formatting.RED),
+        // "Oyunu Kapat" (Close) - danger red with confirmation
+        this.addDrawableChild(ModernButtonWidget.danger(
+                centerX - 100, centerY + 48, 200, 25,
+                Text.literal("Oyunu Kapat"),
                 button -> {
-                    PavClient.LOGGER.info("[{}] User chose to close the game.", PavClient.MOD_NAME);
                     if (this.client != null) {
-                        this.client.scheduleStop();
+                        this.client.setScreen(new ConfirmQuitScreen(this));
                     }
                 }
-        ).dimensions(centerX, centerY + 40, buttonWidth, buttonHeight).build());
+        ));
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Draw background
-        super.render(context, mouseX, mouseY, delta);
+        GuiHelper.drawDarkOverlay(context, this.width, this.height);
 
-        // Title
-        context.drawCenteredTextWithShadow(
-                this.textRenderer,
-                Text.literal("PavClient").formatted(Formatting.GOLD, Formatting.BOLD),
-                this.width / 2,
-                this.height / 2 - 60,
-                0xFFFFFF
-        );
+        int centerX = this.width / 2;
+        int centerY = this.height / 2;
 
-        // Subtitle - connection failed
-        context.drawCenteredTextWithShadow(
-                this.textRenderer,
-                Text.literal("Sunucuya baglanilamadi!").formatted(Formatting.RED),
-                this.width / 2,
-                this.height / 2 - 40,
-                0xFFFFFF
-        );
+        GuiHelper.drawPanel(context, centerX - 160, centerY - 65, 320, 150);
 
-        // Server address
-        context.drawCenteredTextWithShadow(
-                this.textRenderer,
-                Text.literal("Sunucu: " + PavClient.TARGET_SERVER + ":" + PavClient.TARGET_PORT)
-                        .formatted(Formatting.GRAY),
-                this.width / 2,
-                this.height / 2 - 25,
-                0xFFFFFF
-        );
+        long time = System.currentTimeMillis();
+        int rgbColor = GuiHelper.getRainbowColorSafe(time, 1.5f);
 
-        // Disconnect reason (if available)
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("PavClient"), centerX, centerY - 50, rgbColor);
+
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("Sunucuya baglanilamadi!"), centerX, centerY - 32, 0xFFFF4444);
+
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("Sunucu: " + PavClient.TARGET_SERVER), centerX, centerY - 18, 0xFFAAAAAA);
+
         if (disconnectReason != null) {
-            context.drawCenteredTextWithShadow(
-                    this.textRenderer,
-                    Text.literal("Sebep: ").formatted(Formatting.YELLOW)
-                            .append(disconnectReason.copy().formatted(Formatting.WHITE)),
-                    this.width / 2,
-                    this.height / 2 - 8,
-                    0xFFFFFF
-            );
+            context.drawCenteredTextWithShadow(this.textRenderer,
+                    disconnectReason, centerX, centerY - 2, 0xFFFFAA00);
         }
+
+        super.render(context, mouseX, mouseY, delta);
     }
 
-    /**
-     * Attempts to reconnect to the PavMC server.
-     */
     private void reconnect() {
         if (this.client == null) return;
 
-        PavClient.LOGGER.info("[{}] Retrying connection to {}:{}",
-                PavClient.MOD_NAME, PavClient.TARGET_SERVER, PavClient.TARGET_PORT);
-
-        ServerInfo serverInfo = new ServerInfo(
-                PavClient.MOD_NAME,
-                PavClient.TARGET_SERVER + ":" + PavClient.TARGET_PORT,
-                ServerInfo.ServerType.OTHER
-        );
-
+        ServerInfo serverInfo = new ServerInfo(PavClient.MOD_NAME,
+                PavClient.TARGET_SERVER + ":" + PavClient.TARGET_PORT, ServerInfo.ServerType.OTHER);
         ServerAddress serverAddress = ServerAddress.parse(
-                PavClient.TARGET_SERVER + ":" + PavClient.TARGET_PORT
-        );
+                PavClient.TARGET_SERVER + ":" + PavClient.TARGET_PORT);
 
-        // Use this screen as the parent (not TitleScreen, to avoid re-triggering auto-connect mixin)
-        // Parameters: (parentScreen, client, serverAddress, serverInfo, quickPlay, cookieStorage)
-        ConnectScreen.connect(
-                this,
-                this.client,
-                serverAddress,
-                serverInfo,
-                false,   // quickPlay
-                null     // cookieStorage
-        );
+        ConnectScreen.connect(this, this.client, serverAddress, serverInfo, false, null);
     }
 
-    /**
-     * Prevent closing this screen with ESC key.
-     * The user must choose one of the two buttons.
-     */
     @Override
     public boolean shouldCloseOnEsc() {
         return false;
