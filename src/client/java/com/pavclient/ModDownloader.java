@@ -60,6 +60,8 @@ public class ModDownloader {
             new ModEntry("chat-heads", "Chat Heads"),
             new ModEntry("3dskinlayers", "3D Skin Layers"),
             new ModEntry("simple-voice-chat", "Simple Voice Chat"),
+            new ModEntry("fabric-language-kotlin", "Fabric Language Kotlin"),
+            new ModEntry("yacl", "YetAnotherConfigLib"),
             new ModEntry("zoomify", "Zoomify")
     );
 
@@ -305,6 +307,8 @@ public class ModDownloader {
                 case "chat-heads" -> "chat_heads";
                 case "3dskinlayers" -> "skinlayers3d";
                 case "simple-voice-chat" -> "voicechat";
+                case "fabric-language-kotlin" -> "fabric-language-kotlin";
+                case "yacl" -> "yet-another-config";
                 case "zoomify" -> "zoomify";
                 default -> slug;
             };
