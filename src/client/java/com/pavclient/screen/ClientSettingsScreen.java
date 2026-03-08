@@ -11,15 +11,14 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 
 /**
- * Modern 4 sekmeli Client Ayarlari.
- * Sayfalar: Gorunum | Ozellikler | HUD | Dans
- * Soft/pastel renk temasi.
+ * Modern 5 sekmeli Client Ayarlari.
+ * Sayfalar: Gorunum | HUD | Dans | Bilgi
  */
 public class ClientSettingsScreen extends Screen {
 
     private final Screen parent;
     private int currentPage = 0;
-    private static final String[] PAGES = {"G\u00f6r\u00fcn\u00fcm", "\u00d6zellikler", "HUD", "Dans"};
+    private static final String[] PAGES = {"G\u00f6r\u00fcn\u00fcm", "HUD", "Dans", "Bilgi"};
 
     public ClientSettingsScreen(Screen parent) {
         super(Text.literal("PavClient Ayarlar\u0131"));
@@ -56,9 +55,9 @@ public class ClientSettingsScreen extends Screen {
 
         switch (currentPage) {
             case 0 -> initPageGorunum(cx, y0, bw, bh, gap, cfg);
-            case 1 -> initPageOzellikler(cx, y0, bw, bh, gap, cfg);
-            case 2 -> initPageHud(cx, y0, bw, bh, gap, cfg);
-            case 3 -> initPageDans(cx, y0, bw, bh, gap);
+            case 1 -> initPageHud(cx, y0, bw, bh, gap, cfg);
+            case 2 -> initPageDans(cx, y0, bw, bh, gap);
+            case 3 -> initPageBilgi(cx, y0, bw, bh, gap);
         }
 
         // Geri butonu
@@ -94,29 +93,7 @@ public class ClientSettingsScreen extends Screen {
                     btn.setMessage(toggleText("Ger\u00e7ek\u00e7i Hareketler", cfg.realisticAnimations)); PavConfig.save(); });
     }
 
-    /** Sayfa 1: Ozellikler */
-    private void initPageOzellikler(int cx, int y, int w, int h, int gap, PavConfig cfg) {
-        this.addDrawableChild(ModernButtonWidget.success(cx - w / 2, y, w, h,
-                Text.literal("\u2714 Lithium + FerriteCore Aktif"), btn -> {}));
-
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap, w, h,
-                Text.literal("Shader: Mod Men\u00fc \u00fczerinden"),
-                btn -> {}));
-
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap * 2, w, h,
-                Text.literal("\u2714 \u00c7oklu Versiyon: 1.8 - 1.21.4"),
-                btn -> {}));
-
-        this.addDrawableChild(ModernButtonWidget.success(cx - w / 2, y + gap * 3, w, h,
-                Text.literal("\u2714 PM | Tag Sistemi Aktif"),
-                btn -> {}));
-
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap * 4, w, h,
-                Text.literal("Sunucu: " + PavClient.TARGET_SERVER),
-                btn -> {}));
-    }
-
-    /** Sayfa 2: HUD */
+    /** Sayfa 1: HUD */
     private void initPageHud(int cx, int y, int w, int h, int gap, PavConfig cfg) {
         addToggle(cx, y, w, h, "RGB Yaz\u0131", cfg.rgbTextEnabled,
                 btn -> { cfg.rgbTextEnabled = !cfg.rgbTextEnabled;
@@ -137,11 +114,11 @@ public class ClientSettingsScreen extends Screen {
                     btn.setMessage(Text.literal("Z\u0131rh Boyut: " + String.format("%.1fx", cfg.armorHudScale))); PavConfig.save(); }));
 
         this.addDrawableChild(ModernButtonWidget.success(cx - w / 2, y + gap * 4 + 8, w, h,
-                Text.literal("\u270e Mouse ile D\u00fczenle"),
+                Text.literal("\u270e D\u00fczenle"),
                 btn -> { if (this.client != null) this.client.setScreen(new HudEditScreen(this)); }));
     }
 
-    /** Sayfa 3: Dans/Emote */
+    /** Sayfa 2: Dans/Emote */
     private void initPageDans(int cx, int y, int w, int h, int gap) {
         String[] names = EmoteManager.EMOTE_NAMES;
         for (int i = 0; i < names.length; i++) {
@@ -155,7 +132,40 @@ public class ClientSettingsScreen extends Screen {
         }
 
         this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + names.length * gap + 8, w, h,
-                Text.literal("PavClient kullananlar dansini g\u00f6r\u00fcr"),
+                Text.literal("\u00a77PavClient kullananlar dansini g\u00f6r\u00fcr"),
+                btn -> {}));
+    }
+
+    /** Sayfa 3: Bilgi */
+    private void initPageBilgi(int cx, int y, int w, int h, int gap) {
+        // Discord
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y, w, h,
+                Text.literal("\u00a7bDiscord: \u00a7fdiscord.gg/pavmc"),
+                btn -> {}));
+
+        // YouTube
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap, w, h,
+                Text.literal("\u00a7cYouTube: \u00a7fPavMC"),
+                btn -> {}));
+
+        // Cizgi ayirici (bos buton)
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap * 2, w, h,
+                Text.literal("\u00a78\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"),
+                btn -> {}));
+
+        // Sunucu
+        this.addDrawableChild(ModernButtonWidget.success(cx - w / 2, y + gap * 3, w, h,
+                Text.literal("\u25c6 " + PavClient.TARGET_SERVER),
+                btn -> {}));
+
+        // Developer
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap * 4 + 8, w, h,
+                Text.literal("\u00a77Developed by \u00a7fLemonyMC"),
+                btn -> {}));
+
+        // Version
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + gap * 5 + 8, w, h,
+                Text.literal("\u00a78v" + PavClient.CLIENT_VERSION),
                 btn -> {}));
     }
 
@@ -174,7 +184,6 @@ public class ClientSettingsScreen extends Screen {
 
         GuiHelper.drawPanel(context, cx - 145, 18, 290, this.height - 36);
 
-        // Soft pastel baslik - sabit renk, rainbow degil
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("\u25c6 PavClient Ayarlar\u0131 \u25c6"), cx, 26, 0xFFB0BEC5);
 
