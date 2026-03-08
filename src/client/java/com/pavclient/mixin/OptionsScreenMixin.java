@@ -2,11 +2,12 @@ package com.pavclient.mixin;
 
 import com.pavclient.gui.GuiHelper;
 import com.pavclient.gui.ModernButtonWidget;
+import com.pavclient.screen.ModernLanguageScreen;
+import com.pavclient.screen.ModernResourcePackScreen;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.option.*;
-import net.minecraft.client.gui.screen.pack.PackScreen;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Final;
@@ -20,8 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Vanilla Ayarlar ekranini modern PavClient GUI ile yeniden yapar.
- * Kaldirilan butonlar: Olcum Verileri, Katkida Bulunanlar, Cevrimici
+ * Vanilla Ayarlar ekrani - modern PavClient GUI.
+ * Kaldirilan: Olcum Verileri, Katkida Bulunanlar, Cevrimici
+ * Dil: Modern sadece TR/EN ekranina yonlendirir
+ * Kaynak Paketleri: kaynakpaketleri klasorune yonlendirir
  */
 @Mixin(OptionsScreen.class)
 public abstract class OptionsScreenMixin extends Screen {
@@ -35,7 +38,6 @@ public abstract class OptionsScreenMixin extends Screen {
 
     @Inject(method = "init", at = @At("TAIL"))
     private void pavclient$replaceWithModernButtons(CallbackInfo ci) {
-        // Tum mevcut butonlari kaldir
         List<Element> toRemove = new ArrayList<>(this.children());
         for (Element child : toRemove) {
             if (child instanceof ClickableWidget w) {
@@ -70,11 +72,11 @@ public abstract class OptionsScreenMixin extends Screen {
                 btn -> { if (this.client != null) this.client.setScreen(new ControlsOptionsScreen(this, this.settings)); }
         ));
 
-        // Dil
+        // Dil - Modern sadece TR/EN ekrani
         this.addDrawableChild(ModernButtonWidget.create(
                 cx - bw / 2, startY + gap * 3, bw, bh,
                 Text.literal("\u2603 Dil"),
-                btn -> { if (this.client != null) this.client.setScreen(new LanguageOptionsScreen(this, this.settings, this.client.getLanguageManager())); }
+                btn -> { if (this.client != null) this.client.setScreen(new ModernLanguageScreen(this, this.client.getLanguageManager())); }
         ));
 
         // Sohbet Ayarlari
@@ -84,12 +86,11 @@ public abstract class OptionsScreenMixin extends Screen {
                 btn -> { if (this.client != null) this.client.setScreen(new ChatOptionsScreen(this, this.settings)); }
         ));
 
-        // Kaynak Paketleri
+        // Kaynak Paketleri - kaynakpaketleri klasoru
         this.addDrawableChild(ModernButtonWidget.create(
                 cx - bw / 2, startY + gap * 5, bw, bh,
                 Text.literal("\u2261 Kaynak Paketleri"),
-                btn -> { if (this.client != null) this.client.setScreen(new PackScreen(
-                        this.client.getResourcePackManager(), this::pavclient$refreshPacks, this.client.getResourcePackDir(), Text.translatable("resourcePack.title"))); }
+                btn -> { if (this.client != null) this.client.setScreen(new ModernResourcePackScreen(this)); }
         ));
 
         // Erisilebilirlik
@@ -106,7 +107,7 @@ public abstract class OptionsScreenMixin extends Screen {
                 btn -> { if (this.client != null) this.client.setScreen(new SkinOptionsScreen(this, this.settings)); }
         ));
 
-        // Geri (Bitti)
+        // Geri
         this.addDrawableChild(ModernButtonWidget.create(
                 cx - bw / 2, this.height - 32, bw, bh,
                 Text.literal("\u2190 Bitti"),
@@ -114,29 +115,15 @@ public abstract class OptionsScreenMixin extends Screen {
         ));
     }
 
-    private void pavclient$refreshPacks(net.minecraft.resource.ResourcePackManager packManager) {
-        if (this.client != null) {
-            this.settings.refreshResourcePacks(packManager);
-        }
-    }
-
-    @Inject(method = "init", at = @At("HEAD"))
-    private void pavclient$clearLayout(CallbackInfo ci) {
-        // Layout widget'in eklenmesine izin ver ama biz TAIL'de kaldirip kendi butonlarimizi koyacagiz
-    }
-
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Modern background
         GuiHelper.drawClientBackground(context, this.width, this.height);
         int cx = this.width / 2;
         GuiHelper.drawPanel(context, cx - 130, 14, 260, this.height - 28);
 
-        // Baslik
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("\u2699 Ayarlar"), cx, 22, 0xFFB0BEC5);
 
-        // Butonlari renderla (super.render Screen sinifindan)
         for (var child : this.children()) {
             if (child instanceof ClickableWidget w) {
                 w.render(context, mouseX, mouseY, delta);

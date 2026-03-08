@@ -11,7 +11,8 @@
         "CameraTiltMixin",
         "PlayerNametagMixin",
         "PlayerEntityRendererMixin",
-        "OptionsScreenMixin"
+        "OptionsScreenMixin",
+        "GameOptionsScreenMixin"
     ],
     "injectors": {
         "defaultRequire": 1

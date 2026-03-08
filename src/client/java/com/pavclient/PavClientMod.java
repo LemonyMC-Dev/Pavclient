@@ -3,6 +3,7 @@ package com.pavclient;
 import com.pavclient.config.PavConfig;
 import com.pavclient.emote.EmoteManager;
 import com.pavclient.hud.HudRenderer;
+import com.pavclient.network.PavClientChannel;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.loader.api.FabricLoader;
@@ -54,6 +55,9 @@ public class PavClientMod implements ClientModInitializer {
             });
             LOGGER.info("[{}] Started background installer thread: {}", PavClient.MOD_NAME, installerThread.getName());
         }
+
+        // PavClient network channel (PM | tag tespiti)
+        PavClientChannel.register();
 
         // Emote/dans sistemi
         EmoteManager.init();

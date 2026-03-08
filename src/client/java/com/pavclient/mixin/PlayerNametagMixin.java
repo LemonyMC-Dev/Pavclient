@@ -1,5 +1,6 @@
 package com.pavclient.mixin;
 
+import com.pavclient.PavClientUsers;
 import com.pavclient.config.PavConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -16,9 +17,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Oyuncu nametag mixin - PlayerEntityRenderer hedefli:
+ * Nametag mixin:
  * - Kendi ismini goster toggle
- * - Tum oyuncularin basinda "PM | " prefix goster
+ * - SADECE PavClient kullanan oyunculara PM | prefix
  */
 @Mixin(PlayerEntityRenderer.class)
 public class PlayerNametagMixin {
@@ -39,27 +40,28 @@ public class PlayerNametagMixin {
         String localName = mc.player.getName().getString();
         boolean isSelf = playerName.equals(localName);
 
-        // Kendi ismini gosterme kapali ise cancel
+        // Kendi ismini gosterme kapali
         if (isSelf && !PavConfig.get().showOwnName) {
             ci.cancel();
             return;
         }
 
-        // PM | prefix ekle
-        ci.cancel();
+        // Sadece PavClient kullanicilarina PM | ekle
+        if (PavClientUsers.isPavUser(playerName)) {
+            ci.cancel();
 
-        MutableText prefix = Text.literal("PM")
-                .formatted(Formatting.LIGHT_PURPLE)
-                .append(Text.literal(" | ").formatted(Formatting.GRAY));
-        MutableText name = Text.literal(playerName).formatted(Formatting.WHITE);
-        MutableText fullText = prefix.append(name);
+            MutableText prefix = Text.literal("PM")
+                    .formatted(Formatting.LIGHT_PURPLE)
+                    .append(Text.literal(" | ").formatted(Formatting.GRAY));
+            MutableText name = Text.literal(playerName).formatted(Formatting.WHITE);
+            MutableText fullText = prefix.append(name);
 
-        // Sonsuz dongu korumasiyla renderla
-        pavclient$rendering = true;
-        try {
-            pavclient$renderNameTag(state, fullText, matrices, vertexConsumers, light);
-        } finally {
-            pavclient$rendering = false;
+            pavclient$rendering = true;
+            try {
+                pavclient$renderNameTag(state, fullText, matrices, vertexConsumers, light);
+            } finally {
+                pavclient$rendering = false;
+            }
         }
     }
 
@@ -79,7 +81,6 @@ public class PlayerNametagMixin {
 
         float textWidth = textRenderer.getWidth(text);
         float x = -textWidth / 2.0f;
-
         int bgColor = (int)(mc.options.getTextBackgroundOpacity(0.25f) * 255.0f) << 24;
 
         textRenderer.draw(text, x, 0, 0x20FFFFFF, false,
