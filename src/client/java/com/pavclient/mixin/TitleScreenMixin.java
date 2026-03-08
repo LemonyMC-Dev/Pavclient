@@ -2,6 +2,7 @@ package com.pavclient.mixin;
 
 import com.pavclient.PavClient;
 import com.pavclient.PavClientMod;
+import com.pavclient.screen.ConnectionFailedScreen;
 import com.pavclient.screen.InstallCompleteScreen;
 import com.pavclient.screen.InstallProgressScreen;
 import net.minecraft.client.MinecraftClient;
@@ -16,56 +17,57 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Mixin: Completely bypasses the Title Screen.
- * - If new mods were just downloaded -> show InstallCompleteScreen
- * - Otherwise -> auto-connect to oyna.pavmc.com
- * Title screen is NEVER shown to the user.
+ * Mixin: Ilk acilista Title Screen'i bypass eder ve auto-connect yapar.
+ * Baglanti basarisiz olursa ConnectionFailedScreen gosterilir (sonsuz dongu yok).
  */
 @Mixin(TitleScreen.class)
 public class TitleScreenMixin {
 
     @Unique
-    private static boolean pavclient$handled = false;
+    private static boolean pavclient$firstLaunchHandled = false;
 
     @Inject(method = "init", at = @At("HEAD"), cancellable = true)
     private void pavclient$onInit(CallbackInfo ci) {
-        if (pavclient$handled) {
-            // If we get here again (e.g. from disconnect), just auto-connect
-            pavclient$autoConnect();
-            ci.cancel();
-            return;
-        }
-
-        pavclient$handled = true;
         MinecraftClient client = MinecraftClient.getInstance();
 
-        // Still installing mods in background
-        if (PavClientMod.installInProgress) {
-            client.setScreen(new InstallProgressScreen());
+        // Ilk acilis: mod kurulumu kontrol et, sonra auto-connect
+        if (!pavclient$firstLaunchHandled) {
+            pavclient$firstLaunchHandled = true;
+
+            // Hala mod indiriliyor
+            if (PavClientMod.installInProgress) {
+                client.setScreen(new InstallProgressScreen());
+                ci.cancel();
+                return;
+            }
+
+            // Yeni mod indirildi, restart gerekli
+            if (PavClientMod.needsRestart) {
+                PavClient.LOGGER.info("[{}] New mods installed. Showing install complete screen.", PavClient.MOD_NAME);
+                client.setScreen(new InstallCompleteScreen());
+                ci.cancel();
+                return;
+            }
+
+            // Ilk auto-connect
+            PavClient.LOGGER.info("[{}] Bypassing title screen -> connecting to {}:{}",
+                    PavClient.MOD_NAME, PavClient.TARGET_SERVER, PavClient.TARGET_PORT);
+            pavclient$autoConnect(client);
             ci.cancel();
             return;
         }
 
-        // Check if restart is needed (new mods downloaded)
-        if (PavClientMod.needsRestart) {
-            PavClient.LOGGER.info("[{}] New mods installed. Showing install complete screen.", PavClient.MOD_NAME);
-            client.setScreen(new InstallCompleteScreen());
-            ci.cancel();
-            return;
-        }
-
-        // Auto-connect to PavMC
-        PavClient.LOGGER.info("[{}] Bypassing title screen -> connecting to {}:{}",
-                PavClient.MOD_NAME, PavClient.TARGET_SERVER, PavClient.TARGET_PORT);
-
-        pavclient$autoConnect();
+        // Sonraki TitleScreen acilislari: auto-connect yapma, ConnectionFailedScreen goster.
+        // Bu noktaya disconnect/fail sonrasi gelinir. Sonsuz donguyu onlemek icin
+        // direkt ConnectionFailedScreen'e yonlendir.
+        PavClient.LOGGER.info("[{}] TitleScreen reached after disconnect. Showing reconnect screen.", PavClient.MOD_NAME);
+        client.setScreen(new ConnectionFailedScreen(
+                net.minecraft.text.Text.literal("Sunucu ba\u011flant\u0131s\u0131 kesildi.")));
         ci.cancel();
     }
 
     @Unique
-    private static void pavclient$autoConnect() {
-        MinecraftClient client = MinecraftClient.getInstance();
-
+    private static void pavclient$autoConnect(MinecraftClient client) {
         ServerInfo serverInfo = new ServerInfo(
                 PavClient.MOD_NAME,
                 PavClient.TARGET_SERVER + ":" + PavClient.TARGET_PORT,
@@ -76,8 +78,11 @@ public class TitleScreenMixin {
                 PavClient.TARGET_SERVER + ":" + PavClient.TARGET_PORT
         );
 
+        // Parent olarak ConnectionFailedScreen ver, TitleScreen degil
+        // Boylece fail durumunda TitleScreen.init dongusu tetiklenmez
         ConnectScreen.connect(
-                new TitleScreen(),
+                new ConnectionFailedScreen(
+                        net.minecraft.text.Text.literal("Ba\u011flant\u0131 kurulamad\u0131.")),
                 client,
                 serverAddress,
                 serverInfo,

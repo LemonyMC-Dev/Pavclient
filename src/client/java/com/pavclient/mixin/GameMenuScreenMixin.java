@@ -120,6 +120,10 @@ public abstract class GameMenuScreenMixin extends Screen {
         ServerInfo info = new ServerInfo(PavClient.MOD_NAME,
                 PavClient.TARGET_SERVER + ":" + PavClient.TARGET_PORT, ServerInfo.ServerType.OTHER);
         ServerAddress addr = ServerAddress.parse(PavClient.TARGET_SERVER + ":" + PavClient.TARGET_PORT);
-        ConnectScreen.connect(this, this.client, addr, info, false, null);
+        // Parent olarak ConnectionFailedScreen ver, TitleScreen degil (sonsuz dongu onlemi)
+        ConnectScreen.connect(
+                new com.pavclient.screen.ConnectionFailedScreen(
+                        Text.literal("Ba\u011flant\u0131 kurulamad\u0131.")),
+                this.client, addr, info, false, null);
     }
 }
