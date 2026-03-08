@@ -67,51 +67,7 @@ public class PavClientMod implements ClientModInitializer {
         // Register HUD renderer (RGB text, armor HUD, custom crosshair, emote indicator)
         HudRenderCallback.EVENT.register(new HudRenderer());
 
-        // Discord RPC config olustur (Simple Discord RPC modu icin)
-        setupDiscordRpc();
-
         LOGGER.info("[{}] Client initialization complete. Target: {}:{}",
                 PavClient.MOD_NAME, PavClient.TARGET_SERVER, PavClient.TARGET_PORT);
-    }
-
-    /**
-     * Simple Discord RPC modunun config dosyasini olusturur.
-     * oyna.pavmc.com olarak ayarlar.
-     */
-    private void setupDiscordRpc() {
-        Path configDir = FabricLoader.getInstance().getConfigDir();
-        Path rpcConfig = configDir.resolve("simple-discord-rpc.toml");
-
-        // Sadece yoksa olustur (kullanici degistirmis olabilir)
-        if (!Files.exists(rpcConfig)) {
-            String config = """
-                    [general]
-                    applicationID = 1103952058914476133
-                    
-                    [text]
-                    line1 = "PavClient v%s"
-                    line2 = "oyna.pavmc.com"
-                    
-                    [image]
-                    largeImageKey = "minecraft"
-                    largeImageText = "PavClient"
-                    smallImageKey = ""
-                    smallImageText = ""
-                    
-                    [buttons]
-                    enabled = true
-                    label1 = "PavMC Sunucusu"
-                    url1 = "https://discord.gg/pavmc"
-                    label2 = ""
-                    url2 = ""
-                    """.formatted(PavClient.CLIENT_VERSION);
-            try {
-                Files.createDirectories(configDir);
-                Files.writeString(rpcConfig, config);
-                LOGGER.info("[{}] Discord RPC config created", PavClient.MOD_NAME);
-            } catch (IOException e) {
-                LOGGER.warn("[{}] Failed to create Discord RPC config", PavClient.MOD_NAME, e);
-            }
-        }
     }
 }

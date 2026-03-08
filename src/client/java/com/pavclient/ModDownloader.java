@@ -21,20 +21,18 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.time.Duration;
-import java.util.HexFormat;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Automatic mod downloader - gizli klasor sistemi.
- * Modlar mods/.pavclient/ altina random isimle indirilir.
- * Fabric Loader mods/ alt klasorlerini otomatik tarar.
+ * Mod downloader - mods/ klasorune RANDOM isimle indirir.
+ * Guvenlik: PavClient'in indirmedigi modlari notmods/ klasorune tasir.
+ * pavclient.jar ve fabric-api disindaki tum jar'lar kontrol edilir.
  *
- * Kullanici goremez: dot-prefix gizli + random isimler.
+ * Meta dosyalari: mods/.pvmeta/ altinda slug=randomname.jar eslesmesi tutulur.
  */
 public class ModDownloader {
 
@@ -45,8 +43,13 @@ public class ModDownloader {
     private static final String GAME_VERSION = "1.21.4";
     private static final String LOADER = "fabric";
 
-    /** Gizli klasor adi - mods/.pavclient/ */
-    private static final String HIDDEN_DIR = ".pavclient";
+    /** Meta klasor - hangi random dosyanin hangi mod oldugunu tutar */
+    private static final String META_DIR = ".pvmeta";
+
+    /** Izin verilen dosya isim kaliplari (PavClient veya FabricAPI) */
+    private static final List<String> WHITELISTED_PATTERNS = List.of(
+            "pavclient", "fabric-api", "fabricapi"
+    );
 
     private static final List<ModEntry> REQUIRED_MODS = List.of(
             new ModEntry("viafabricplus", "ViaFabricPlus"),
@@ -63,19 +66,35 @@ public class ModDownloader {
             new ModEntry("yacl", "YetAnotherConfigLib"),
             new ModEntry("zoomify", "Zoomify"),
             new ModEntry("not-enough-animations", "Not Enough Animations"),
-            new ModEntry("entityculling", "Entity Culling"),
-            new ModEntry("c2me-fabric", "C2ME"),
-            new ModEntry("simple-discord-rpc", "Simple Discord RPC")
+            new ModEntry("entityculling", "Entity Culling")
     );
 
+    /** Java 22+ gerektiren modlar (Pojav Java 21 kullaniyorsa indirilmez) */
+    private static final List<ModEntry> JAVA22_MODS = List.of(
+            new ModEntry("vanilla-rpc", "Vanilla RPC")
+    );
+
+    private static boolean isJava22OrHigher() {
+        try {
+            int ver = Runtime.version().feature();
+            return ver >= 22;
+        } catch (Exception e) {
+            // Fallback: spec version parse
+            String specVer = System.getProperty("java.specification.version", "21");
+            try { return Integer.parseInt(specVer) >= 22; } catch (NumberFormatException ex) { return false; }
+        }
+    }
+
     private final Path modsDir;
-    private final Path hiddenDir;
+    private final Path metaDir;
+    private final Path notModsDir;
     private final HttpClient httpClient;
     private final AtomicBoolean newModsDownloaded = new AtomicBoolean(false);
 
     public ModDownloader(Path modsDir) {
         this.modsDir = modsDir;
-        this.hiddenDir = modsDir.resolve(HIDDEN_DIR);
+        this.metaDir = modsDir.resolve(META_DIR);
+        this.notModsDir = modsDir.getParent().resolve("notmods");
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(15))
                 .followRedirects(HttpClient.Redirect.NORMAL)
@@ -88,68 +107,138 @@ public class ModDownloader {
 
     public boolean hasRequiredModsLocally() {
         try {
-            Files.createDirectories(hiddenDir);
+            Files.createDirectories(modsDir);
+            Files.createDirectories(metaDir);
         } catch (IOException e) {
             return false;
         }
 
         removeSodium();
+        enforceModSecurity();
 
         for (ModEntry mod : REQUIRED_MODS) {
             if (!isModPresentLocally(mod)) {
                 return false;
             }
         }
+        // Java 22+ modlari
+        if (isJava22OrHigher()) {
+            for (ModEntry mod : JAVA22_MODS) {
+                if (!isModPresentLocally(mod)) {
+                    return false;
+                }
+            }
+            LOGGER.info("Java {} detected - Discord RPC enabled", Runtime.version().feature());
+        } else {
+            LOGGER.info("Java {} detected - Discord RPC disabled (requires Java 22+)", System.getProperty("java.specification.version"));
+        }
         return true;
     }
 
     public boolean downloadAllMods() {
-        LOGGER.info("Starting automatic mod download to hidden dir...");
+        LOGGER.info("Starting automatic mod download...");
 
         try {
-            Files.createDirectories(hiddenDir);
+            Files.createDirectories(modsDir);
+            Files.createDirectories(metaDir);
         } catch (IOException e) {
-            LOGGER.error("Failed to create hidden mods directory: {}", hiddenDir, e);
+            LOGGER.error("Failed to create directories", e);
             return false;
         }
 
         removeSodium();
+        enforceModSecurity();
 
-        ExecutorService executor = Executors.newFixedThreadPool(Math.min(3, REQUIRED_MODS.size()));
-        List<CompletableFuture<Void>> futures = REQUIRED_MODS.stream()
+        // Tum indirilebilecek modlari birlestir
+        List<ModEntry> allMods = new ArrayList<>(REQUIRED_MODS);
+        if (isJava22OrHigher()) {
+            allMods.addAll(JAVA22_MODS);
+            LOGGER.info("Java 22+ detected - including Discord RPC");
+        } else {
+            LOGGER.info("Java 21 detected - skipping Discord RPC (requires Java 22+)");
+        }
+
+        ExecutorService executor = Executors.newFixedThreadPool(Math.min(3, allMods.size()));
+        List<CompletableFuture<Void>> futures = allMods.stream()
                 .map(mod -> CompletableFuture.runAsync(() -> downloadMod(mod), executor))
                 .toList();
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
         executor.shutdown();
 
+        // Indirme sonrasi tekrar guvenlik kontrolu
+        enforceModSecurity();
+
         LOGGER.info("Mod download completed. New mods: {}", newModsDownloaded.get());
         return newModsDownloaded.get();
     }
 
-    private void removeSodium() {
-        // Hem mods/ hem de mods/.pavclient/ icinden kaldir
-        removeSodiumFrom(modsDir);
-        removeSodiumFrom(hiddenDir);
+    /**
+     * GUVENLIK: PavClient'in indirmedigi modlari notmods/ klasorune tasir.
+     * pavclient.jar ve fabric-api haric tum jar'lar kontrol edilir.
+     */
+    private void enforceModSecurity() {
+        try {
+            // Meta'dan bilinen dosya isimlerini topla
+            Set<String> knownFiles = new HashSet<>();
+            if (Files.exists(metaDir)) {
+                Files.list(metaDir).filter(p -> p.toString().endsWith(".meta")).forEach(meta -> {
+                    try {
+                        String content = Files.readString(meta);
+                        String[] lines = content.split("\n");
+                        if (lines.length >= 2) {
+                            knownFiles.add(lines[1]); // random dosya adi
+                        }
+                    } catch (IOException ignored) {}
+                });
+            }
+
+            // mods/ klasorundeki jar'lari kontrol et
+            Files.list(modsDir)
+                    .filter(p -> p.getFileName().toString().toLowerCase().endsWith(".jar"))
+                    .filter(p -> !Files.isDirectory(p))
+                    .forEach(jarFile -> {
+                        String name = jarFile.getFileName().toString().toLowerCase();
+
+                        // Whitelist kontrolu (pavclient, fabric-api)
+                        boolean isWhitelisted = WHITELISTED_PATTERNS.stream().anyMatch(name::contains);
+                        if (isWhitelisted) return;
+
+                        // Meta'da kayitli mi?
+                        boolean isKnown = knownFiles.contains(jarFile.getFileName().toString());
+                        if (isKnown) return;
+
+                        // Bilinmeyen mod - notmods/ klasorune tasi
+                        try {
+                            Files.createDirectories(notModsDir);
+                            Path target = notModsDir.resolve(jarFile.getFileName().toString());
+                            Files.move(jarFile, target, StandardCopyOption.REPLACE_EXISTING);
+                            LOGGER.warn("SECURITY: Moved unknown mod to notmods/: {}", jarFile.getFileName());
+                        } catch (IOException e) {
+                            LOGGER.warn("Failed to move unknown mod: {}", jarFile.getFileName(), e);
+                        }
+                    });
+        } catch (IOException e) {
+            LOGGER.warn("Failed to enforce mod security", e);
+        }
     }
 
-    private void removeSodiumFrom(Path dir) {
+    private void removeSodium() {
         try {
-            if (!Files.exists(dir)) return;
-            Files.list(dir)
+            Files.list(modsDir)
                     .filter(p -> {
                         String name = p.getFileName().toString().toLowerCase();
                         return name.contains("sodium") && name.endsWith(".jar");
                     })
                     .forEach(p -> {
                         try {
-                            LOGGER.info("Removing incompatible mod: {} (gl4es crash)", p.getFileName());
+                            LOGGER.info("Removing incompatible: {} (gl4es crash)", p.getFileName());
                             Files.deleteIfExists(p);
                         } catch (IOException e) {
                             LOGGER.warn("Failed to delete: {}", p, e);
                         }
                     });
         } catch (IOException e) {
-            LOGGER.warn("Failed to scan for Sodium in {}", dir, e);
+            LOGGER.warn("Failed to scan for Sodium", e);
         }
     }
 
@@ -177,23 +266,26 @@ public class ModDownloader {
             }
 
             String downloadUrl = primaryFile.get("url").getAsString();
-            String originalFileName = primaryFile.get("filename").getAsString();
             String expectedSha512 = primaryFile.getAsJsonObject("hashes").get("sha512").getAsString();
 
-            // Zaten indirildiyse hash kontrol et (hem gizli hem normal dizinde)
-            if (isModPresentWithHash(mod, expectedSha512)) {
-                LOGGER.info("{} up to date", mod.displayName());
-                return;
+            // Zaten dogru hash ile mevcut mu?
+            Path existingFile = findExistingByMeta(mod.slug());
+            if (existingFile != null && Files.exists(existingFile)) {
+                String existingHash = computeSha512(existingFile);
+                if (expectedSha512.equals(existingHash)) {
+                    LOGGER.info("{} up to date", mod.displayName());
+                    return;
+                }
+                // Eski versiyon - sil
+                Files.deleteIfExists(existingFile);
+                deleteMetaForSlug(mod.slug());
             }
 
-            // Eski versiyonlari temizle
-            cleanOldVersions(mod);
+            // Random isimle indir
+            String randomName = UUID.randomUUID().toString().replace("-", "").substring(0, 16) + ".jar";
+            Path targetFile = modsDir.resolve(randomName);
 
-            // Random isimle gizli klasore indir
-            String randomName = UUID.randomUUID().toString().replace("-", "").substring(0, 12) + ".jar";
-            Path targetFile = hiddenDir.resolve(randomName);
-
-            LOGGER.info("Downloading {} -> .pavclient/{}", mod.displayName(), randomName);
+            LOGGER.info("Downloading {} -> {}", mod.displayName(), randomName);
             downloadFile(downloadUrl, targetFile);
 
             String downloadedHash = computeSha512(targetFile);
@@ -203,11 +295,11 @@ public class ModDownloader {
                 return;
             }
 
-            // Slug mapping dosyasi olustur (hangi random dosya hangi mod)
-            Path mappingFile = hiddenDir.resolve(randomName + ".meta");
-            Files.writeString(mappingFile, mod.slug() + "\n" + originalFileName + "\n" + expectedSha512);
+            // Meta kaydet
+            Path metaFile = metaDir.resolve(mod.slug() + ".meta");
+            Files.writeString(metaFile, mod.slug() + "\n" + randomName + "\n" + expectedSha512);
 
-            LOGGER.info("Verified: {} -> .pavclient/{}", mod.displayName(), randomName);
+            LOGGER.info("Verified: {} ({})", mod.displayName(), randomName);
             newModsDownloaded.set(true);
 
         } catch (Exception e) {
@@ -215,54 +307,34 @@ public class ModDownloader {
         }
     }
 
-    /**
-     * Mod'un hem gizli hem normal dizinde var olup olmadigi + hash kontrolu.
-     */
-    private boolean isModPresentWithHash(ModEntry mod, String expectedHash) {
-        // Gizli dizinde meta dosyalarindan kontrol
-        try {
-            if (Files.exists(hiddenDir)) {
-                var metaFiles = Files.list(hiddenDir)
-                        .filter(p -> p.toString().endsWith(".meta"))
-                        .toList();
-                for (Path meta : metaFiles) {
-                    String content = Files.readString(meta);
-                    String[] lines = content.split("\n");
-                    if (lines.length >= 3 && lines[0].equals(mod.slug()) && lines[2].equals(expectedHash)) {
-                        // Jar dosyasi da var mi?
-                        String jarName = meta.getFileName().toString().replace(".meta", "");
-                        if (Files.exists(hiddenDir.resolve(jarName))) {
-                            return true;
-                        }
-                    }
+    /** Meta dosyasindan mevcut jar dosyasini bul */
+    private Path findExistingByMeta(String slug) {
+        Path metaFile = metaDir.resolve(slug + ".meta");
+        if (Files.exists(metaFile)) {
+            try {
+                String content = Files.readString(metaFile);
+                String[] lines = content.split("\n");
+                if (lines.length >= 2) {
+                    return modsDir.resolve(lines[1]);
                 }
-            }
-        } catch (IOException ignored) {}
+            } catch (IOException ignored) {}
+        }
+        return null;
+    }
 
-        // Normal mods/ dizininde eski tarzda arama
-        return isModPresentLocally(mod);
+    /** Slug icin meta dosyasini sil */
+    private void deleteMetaForSlug(String slug) {
+        try {
+            Files.deleteIfExists(metaDir.resolve(slug + ".meta"));
+        } catch (IOException ignored) {}
     }
 
     private boolean isModPresentLocally(ModEntry mod) {
-        // Gizli dizinde meta dosyalarindan kontrol et
-        try {
-            if (Files.exists(hiddenDir)) {
-                var metaFiles = Files.list(hiddenDir)
-                        .filter(p -> p.toString().endsWith(".meta"))
-                        .toList();
-                for (Path meta : metaFiles) {
-                    String content = Files.readString(meta);
-                    if (content.startsWith(mod.slug() + "\n")) {
-                        String jarName = meta.getFileName().toString().replace(".meta", "");
-                        if (Files.exists(hiddenDir.resolve(jarName))) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        } catch (IOException ignored) {}
-
-        // Fallback: mods/ dizininde isimle arama (eski yontem)
+        Path existing = findExistingByMeta(mod.slug());
+        if (existing != null && Files.exists(existing)) {
+            return true;
+        }
+        // Fallback: isim icerigi ile arama (eski tarz dosyalar icin)
         try {
             return Files.list(modsDir)
                     .filter(p -> p.getFileName().toString().toLowerCase().endsWith(".jar"))
@@ -271,42 +343,6 @@ public class ModDownloader {
         } catch (IOException e) {
             return false;
         }
-    }
-
-    /**
-     * Eski versiyonlari temizle (hem gizli hem normal dizinde).
-     */
-    private void cleanOldVersions(ModEntry mod) {
-        // Gizli dizinden meta + jar temizle
-        try {
-            if (Files.exists(hiddenDir)) {
-                var metaFiles = Files.list(hiddenDir)
-                        .filter(p -> p.toString().endsWith(".meta"))
-                        .toList();
-                for (Path meta : metaFiles) {
-                    String content = Files.readString(meta);
-                    if (content.startsWith(mod.slug() + "\n")) {
-                        String jarName = meta.getFileName().toString().replace(".meta", "");
-                        Files.deleteIfExists(hiddenDir.resolve(jarName));
-                        Files.deleteIfExists(meta);
-                        LOGGER.info("Cleaned old version of {} from hidden dir", mod.displayName());
-                    }
-                }
-            }
-        } catch (IOException ignored) {}
-
-        // Normal mods/ dizininden de temizle
-        try {
-            Files.list(modsDir).filter(p -> {
-                String name = p.getFileName().toString().toLowerCase();
-                return name.contains(mod.localKeyword()) && name.endsWith(".jar");
-            }).forEach(p -> {
-                try {
-                    Files.deleteIfExists(p);
-                    LOGGER.info("Cleaned old {} from mods/", p.getFileName());
-                } catch (IOException ignored) {}
-            });
-        } catch (IOException ignored) {}
     }
 
     private JsonArray fetchVersions(String slug) throws IOException, InterruptedException {
@@ -401,8 +437,7 @@ public class ModDownloader {
                 case "zoomify" -> "zoomify";
                 case "not-enough-animations" -> "notenoughanimations";
                 case "entityculling" -> "entityculling";
-                case "c2me-fabric" -> "c2me";
-                case "simple-discord-rpc" -> "simple-discord-rpc";
+                case "vanilla-rpc" -> "vanillarpc";
                 default -> slug;
             };
         }
