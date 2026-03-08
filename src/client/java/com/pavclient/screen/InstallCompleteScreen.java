@@ -7,62 +7,56 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
-/**
- * Shown after first-time mod installation.
- * Modern branded PavMC screen.
- */
 public class InstallCompleteScreen extends Screen {
 
     public InstallCompleteScreen() {
-        super(Text.literal("PavClient - Kurulum Ba\u015far\u0131l\u0131"));
+        super(Text.literal("PavClient Kurulum"));
     }
 
     @Override
     protected void init() {
         int cx = this.width / 2;
         int cy = this.height / 2;
-
         this.addDrawableChild(ModernButtonWidget.danger(
-                cx - 110, cy + 45, 220, 28,
-                Text.literal("Oyunu Kapat"),
+                cx - 110, cy + 50, 220, 28,
+                Text.literal("Oyunu Kapat ve Yeniden Ba\u015flat"),
                 btn -> { if (this.client != null) this.client.scheduleStop(); }
         ));
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Custom PavMC branded background
         GuiHelper.drawClientBackground(context, this.width, this.height);
-
         int cx = this.width / 2;
         int cy = this.height / 2;
 
-        // Panel
-        GuiHelper.drawPanel(context, cx - 170, cy - 80, 340, 160);
+        GuiHelper.drawPanel(context, cx - 180, cy - 85, 360, 175);
 
         // Rainbow title
-        long time = System.currentTimeMillis();
-        int rgb = GuiHelper.getRainbowColor(time, 1.5f);
-
+        long ms = System.nanoTime() / 1_000_000L;
+        float hue = (ms % 3000) / 3000.0f;
+        int rgb = 0xFF000000 | GuiHelper.hsbToRgb(hue, 0.9f, 1.0f);
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("\u25C6 PavClient \u25C6"), cx, cy - 65, rgb);
+                Text.literal("\u25C6 PavClient \u25C6"), cx, cy - 72, rgb);
 
+        // Mesajlar - net g\u00f6r\u00fcn\u00fcr renkler
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("Gerekli modlar ba\u015far\u0131yla indirildi!"), cx, cy - 38, 0xFF69F0AE);
-
+                Text.literal("\u2714 Kurulum Ba\u015far\u0131l\u0131!"), cx, cy - 48, 0xFF00FF88);
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("Oyunu yeniden ba\u015flat\u0131n"), cx, cy - 22, 0xFFE0E0E0);
+                Text.literal("Gerekli modlar ba\u015far\u0131yla indirildi."), cx, cy - 32, 0xFFFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("Oyunu yeniden ba\u015flat\u0131n ve tekrar girin."), cx, cy - 18, 0xFFE0E0E0);
 
         // Badge
-        int badgeW = this.textRenderer.getWidth("[ Kurulum Ba\u015far\u0131l\u0131 ]") + 12;
-        GuiHelper.drawBorder(context, cx - badgeW / 2, cy - 2, badgeW, 14, 0xFF7C4DFF);
-        context.fill(cx - badgeW / 2, cy - 2, cx + badgeW / 2, cy + 12, 0x447C4DFF);
+        String badge = "[ \u0130ndirme Tamamland\u0131 ]";
+        int bw = this.textRenderer.getWidth(badge) + 16;
+        context.fill(cx - bw / 2, cy + 4, cx + bw / 2, cy + 18, 0x667C4DFF);
+        GuiHelper.drawBorder(context, cx - bw / 2, cy + 4, bw, 14, 0xAAB388FF);
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("[ Kurulum Ba\u015far\u0131l\u0131 ]"), cx, cy + 1, 0xFFB388FF);
+                Text.literal(badge), cx, cy + 7, 0xFFE0CFFF);
 
-        // Version
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("v" + PavClient.CLIENT_VERSION), cx, cy + 25, 0x66FFFFFF);
+                Text.literal("v" + PavClient.CLIENT_VERSION), cx, cy + 30, 0x88FFFFFF);
 
         super.render(context, mouseX, mouseY, delta);
     }

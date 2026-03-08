@@ -11,133 +11,105 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 
-/**
- * PavClient HUD renderer.
- * - RGB "PAVMC 2.SEZON!!" text (bottom-left, scaled 2x, per-character rainbow)
- * - Armor HUD with durability
- * - Custom crosshair
- */
 public class HudRenderer implements HudRenderCallback {
 
     @Override
     public void onHudRender(DrawContext context, RenderTickCounter tickCounter) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client == null || client.player == null) return;
-        if (client.options.hudHidden) return;
-
-        PavConfig config = PavConfig.get();
-
-        if (config.rgbTextEnabled) {
-            renderRgbText(context, client);
-        }
-        if (config.armorHudEnabled) {
-            renderArmorHud(context, client, config);
-        }
-        if (config.customCrosshairEnabled) {
-            renderCustomCrosshair(context, client, config);
-        }
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc == null || mc.player == null || mc.options.hudHidden) return;
+        PavConfig cfg = PavConfig.get();
+        if (cfg.rgbTextEnabled) renderRgbText(context, mc, cfg);
+        if (cfg.armorHudEnabled) renderArmorHud(context, mc, cfg);
+        if (cfg.customCrosshairEnabled) renderCrosshair(context, mc, cfg);
     }
 
     /**
-     * RGB rainbow "PAVMC 2.SEZON!!" - scaled 2x, each character different color.
-     * Uses System.currentTimeMillis() for smooth continuous animation.
+     * RGB: System.nanoTime ile her frame farkl\u0131 renk. Asla sabit kalmaz.
+     * Her karakter farkl\u0131 hue offset -> gradient dalga efekti.
      */
-    private void renderRgbText(DrawContext context, MinecraftClient client) {
-        PavConfig config = PavConfig.get();
-        TextRenderer tr = client.textRenderer;
+    private void renderRgbText(DrawContext context, MinecraftClient mc, PavConfig cfg) {
+        TextRenderer tr = mc.textRenderer;
         String text = "PAVMC 2.SEZON!!";
-        int screenH = client.getWindow().getScaledHeight();
+        int screenH = mc.getWindow().getScaledHeight();
 
-        // Scale 2x for bigger text
-        MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        float scale = 2.0f;
-        // Position: bottom-left corner, accounting for scale
-        float baseX = 6f;
-        float baseY = (screenH - 22f) / scale;
-        matrices.scale(scale, scale, 1.0f);
+        MatrixStack mat = context.getMatrices();
+        mat.push();
+        float scale = cfg.rgbScale;
+        mat.scale(scale, scale, 1.0f);
 
-        long time = System.currentTimeMillis();
-        float xOffset = 0;
+        float drawX = cfg.rgbX / scale;
+        float drawY = (screenH - cfg.rgbY) / scale;
 
+        // nanoTime -> ms çevir, çok hızlı döngü
+        long ms = System.nanoTime() / 1_000_000L;
+        float baseHue = (ms % 3000) / 3000.0f; // 3 saniyede tam döngü
+
+        float xOff = 0;
         for (int i = 0; i < text.length(); i++) {
-            // Each character offset by 150ms for wave effect
-            int color = GuiHelper.getRainbowColor(time + (i * 150L), config.rgbSpeed);
+            float charHue = (baseHue + i * 0.07f) % 1.0f;
+            int color = 0xFF000000 | GuiHelper.hsbToRgb(charHue, 0.9f, 1.0f);
             String ch = String.valueOf(text.charAt(i));
-            context.drawTextWithShadow(tr, Text.literal(ch), (int)(baseX + xOffset), (int)baseY, color);
-            xOffset += tr.getWidth(ch);
+            context.drawTextWithShadow(tr, Text.literal(ch), (int)(drawX + xOff), (int)drawY, color);
+            xOff += tr.getWidth(ch);
         }
-
-        matrices.pop();
+        mat.pop();
     }
 
-    /**
-     * Armor HUD - shows equipped armor items with durability.
-     */
-    private void renderArmorHud(DrawContext context, MinecraftClient client, PavConfig config) {
-        int baseX = config.armorHudX;
-        int baseY;
+    private void renderArmorHud(DrawContext context, MinecraftClient mc, PavConfig cfg) {
+        MatrixStack mat = context.getMatrices();
+        mat.push();
+        float scale = cfg.armorHudScale;
+        mat.scale(scale, scale, 1.0f);
 
-        if (config.armorHudAnchorBottom) {
-            baseY = client.getWindow().getScaledHeight() - config.armorHudY - 80;
+        int bx = (int)(cfg.armorHudX / scale);
+        int by;
+        if (cfg.armorHudAnchorBottom) {
+            by = (int)((mc.getWindow().getScaledHeight() - cfg.armorHudY - 80) / scale);
         } else {
-            baseY = config.armorHudY;
+            by = (int)(cfg.armorHudY / scale);
         }
 
         for (int i = 0; i < 4; i++) {
-            ItemStack stack = client.player.getInventory().armor.get(3 - i);
+            ItemStack stack = mc.player.getInventory().armor.get(3 - i);
             if (!stack.isEmpty()) {
-                int itemY = baseY + (i * 20);
-                context.drawItem(stack, baseX, itemY);
-
+                int iy = by + (i * 20);
+                context.drawItem(stack, bx, iy);
                 if (stack.isDamageable()) {
                     int max = stack.getMaxDamage();
-                    int current = max - stack.getDamage();
-                    float pct = (float) current / max;
-
-                    int durColor = pct > 0.5f ? 0xFF69F0AE : pct > 0.25f ? 0xFFFFD740 : 0xFFFF5252;
-                    context.drawTextWithShadow(client.textRenderer,
-                            Text.literal(String.valueOf(current)),
-                            baseX + 20, itemY + 5, durColor);
+                    int cur = max - stack.getDamage();
+                    float pct = (float) cur / max;
+                    int dc = pct > 0.5f ? 0xFF69F0AE : pct > 0.25f ? 0xFFFFD740 : 0xFFFF5252;
+                    context.drawTextWithShadow(mc.textRenderer,
+                            Text.literal(String.valueOf(cur)), bx + 20, iy + 5, dc);
                 }
             }
         }
+        mat.pop();
     }
 
-    /**
-     * Custom crosshair rendering.
-     */
-    private void renderCustomCrosshair(DrawContext context, MinecraftClient client, PavConfig config) {
-        int cx = client.getWindow().getScaledWidth() / 2;
-        int cy = client.getWindow().getScaledHeight() / 2;
-        int c = 0xFFFFFFFF;
-
-        switch (config.crosshairStyle) {
-            case 1 -> { // Dot
-                context.fill(cx - 1, cy - 1, cx + 2, cy + 2, c);
-            }
-            case 2 -> { // Circle approximation
-                int r = 5;
+    private void renderCrosshair(DrawContext context, MinecraftClient mc, PavConfig cfg) {
+        int cx = mc.getWindow().getScaledWidth() / 2;
+        int cy = mc.getWindow().getScaledHeight() / 2;
+        int c = 0xCCFFFFFF;
+        switch (cfg.crosshairStyle) {
+            case 1 -> context.fill(cx, cy, cx + 1, cy + 1, c);
+            case 2 -> {
+                int r = 4;
                 context.fill(cx - 1, cy - r, cx + 2, cy - r + 1, c);
                 context.fill(cx - 1, cy + r, cx + 2, cy + r + 1, c);
                 context.fill(cx - r, cy - 1, cx - r + 1, cy + 2, c);
                 context.fill(cx + r, cy - 1, cx + r + 1, cy + 2, c);
-                // Diagonal points
-                context.fill(cx + r - 2, cy - r + 2, cx + r - 1, cy - r + 3, c);
-                context.fill(cx - r + 2, cy - r + 2, cx - r + 3, cy - r + 3, c);
-                context.fill(cx + r - 2, cy + r - 2, cx + r - 1, cy + r - 1, c);
-                context.fill(cx - r + 2, cy + r - 2, cx - r + 3, cy + r - 1, c);
             }
-            case 3 -> { // Cross with gap
-                int len = 6; int gap = 3;
+            case 3 -> {
+                int len = 5, gap = 2;
                 context.fill(cx, cy - gap - len, cx + 1, cy - gap, c);
                 context.fill(cx, cy + gap + 1, cx + 1, cy + gap + len + 1, c);
                 context.fill(cx - gap - len, cy, cx - gap, cy + 1, c);
                 context.fill(cx + gap + 1, cy, cx + gap + len + 1, cy + 1, c);
             }
-            default -> { // Plus
-                context.fill(cx - 5, cy, cx + 6, cy + 1, c);
-                context.fill(cx, cy - 5, cx + 1, cy + 6, c);
+            default -> {
+                context.fill(cx - 4, cy, cx + 5, cy + 1, c);
+                context.fill(cx, cy - 4, cx + 1, cy + 5, c);
             }
         }
     }

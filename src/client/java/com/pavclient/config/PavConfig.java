@@ -9,52 +9,47 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/**
- * PavClient configuration system.
- * Saves/loads settings to a JSON file.
- */
 public class PavConfig {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("pavclient.json");
-
     private static PavConfig INSTANCE;
 
-    // === Settings ===
+    // === HUD: RGB Yazı ===
     public boolean rgbTextEnabled = true;
-    public boolean armorHudEnabled = true;
-    public boolean customCrosshairEnabled = false;
-    public int crosshairStyle = 0; // 0=default, 1=dot, 2=circle, 3=cross
-    public boolean optimizationEnabled = true;
+    public float rgbScale = 2.0f;
+    public int rgbX = 6;
+    public int rgbY = 22;
 
-    // Armor HUD position
+    // === HUD: Zırh ===
+    public boolean armorHudEnabled = true;
+    public float armorHudScale = 1.0f;
     public int armorHudX = 5;
     public int armorHudY = 5;
-    public boolean armorHudAnchorBottom = true; // true=bottom-left, false=top-left
+    public boolean armorHudAnchorBottom = true;
 
-    // RGB text speed
-    public float rgbSpeed = 2.0f;
+    // === Crosshair ===
+    public boolean customCrosshairEnabled = false;
+    public int crosshairStyle = 0;
+
+    // === Client Özellikleri ===
+    public boolean showOwnName = false;
+    public boolean blockHighlight = true;
+    public boolean realisticAnimations = false;
 
     private PavConfig() {}
 
     public static PavConfig get() {
-        if (INSTANCE == null) {
-            load();
-        }
+        if (INSTANCE == null) load();
         return INSTANCE;
     }
 
     public static void load() {
         if (Files.exists(CONFIG_PATH)) {
             try {
-                String json = Files.readString(CONFIG_PATH);
-                INSTANCE = GSON.fromJson(json, PavConfig.class);
-                if (INSTANCE == null) {
-                    INSTANCE = new PavConfig();
-                }
-                PavClient.LOGGER.info("[{}] Config loaded.", PavClient.MOD_NAME);
+                INSTANCE = GSON.fromJson(Files.readString(CONFIG_PATH), PavConfig.class);
+                if (INSTANCE == null) INSTANCE = new PavConfig();
             } catch (Exception e) {
-                PavClient.LOGGER.error("[{}] Failed to load config, using defaults.", PavClient.MOD_NAME, e);
                 INSTANCE = new PavConfig();
             }
         } else {
@@ -67,9 +62,8 @@ public class PavConfig {
         try {
             Files.createDirectories(CONFIG_PATH.getParent());
             Files.writeString(CONFIG_PATH, GSON.toJson(get()));
-            PavClient.LOGGER.info("[{}] Config saved.", PavClient.MOD_NAME);
         } catch (IOException e) {
-            PavClient.LOGGER.error("[{}] Failed to save config.", PavClient.MOD_NAME, e);
+            PavClient.LOGGER.error("Config save failed", e);
         }
     }
 }

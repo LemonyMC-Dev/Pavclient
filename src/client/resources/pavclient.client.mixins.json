@@ -5,7 +5,10 @@
     "client": [
         "TitleScreenMixin",
         "DisconnectedScreenMixin",
-        "GameMenuScreenMixin"
+        "GameMenuScreenMixin",
+        "ConnectScreenMixin",
+        "SplashOverlayMixin",
+        "InGameHudMixin"
     ],
     "injectors": {
         "defaultRequire": 1
