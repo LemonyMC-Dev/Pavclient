@@ -7,7 +7,6 @@
         "DisconnectedScreenMixin",
         "GameMenuScreenMixin",
         "ConnectScreenMixin",
-        "SplashOverlayMixin",
         "InGameHudMixin",
         "CameraTiltMixin",
         "PlayerNametagMixin"
