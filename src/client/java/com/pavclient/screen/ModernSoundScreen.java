@@ -47,11 +47,21 @@ public class ModernSoundScreen extends Screen {
 
     private void addVolumeButton(int cx, int y, int w, int h, String label, SoundCategory category) {
         float vol = this.settings.getSoundVolume(category);
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y, w, h,
-                Text.literal(label + ": " + Math.round(vol * 100) + "%"),
-                btn -> {
+        int side = 28;
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y, side, h,
+                Text.literal("<"), btn -> {
+                    double newVol = vol - 0.1;
+                    if (newVol < 0.0) newVol = 1.0;
+                    this.settings.getSoundVolumeOption(category).setValue(newVol);
+                    this.settings.write();
+                    init();
+                }));
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2 + side + 2, y, w - side * 2 - 4, h,
+                Text.literal(label + ": " + Math.round(vol * 100) + "%"), b -> {}));
+        this.addDrawableChild(ModernButtonWidget.create(cx + w / 2 - side, y, side, h,
+                Text.literal(">"), btn -> {
                     double newVol = vol + 0.1;
-                    if (newVol > 1.05) newVol = 0.0;
+                    if (newVol > 1.0) newVol = 0.0;
                     this.settings.getSoundVolumeOption(category).setValue(newVol);
                     this.settings.write();
                     init();

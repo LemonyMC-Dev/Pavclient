@@ -2,7 +2,6 @@ package com.pavclient.screen;
 
 import com.pavclient.PavClient;
 import com.pavclient.config.PavConfig;
-import com.pavclient.emote.EmoteManager;
 import com.pavclient.gui.GuiHelper;
 import com.pavclient.gui.ModernButtonWidget;
 import net.minecraft.client.gui.DrawContext;
@@ -11,14 +10,14 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 
 /**
- * Modern 5 sekmeli Client Ayarlari.
- * Sayfalar: Gorunum | HUD | Dans | Bilgi
+ * Modern 4 sekmeli Client Ayarlari.
+ * Sayfalar: Gorunum | HUD | Bilgi
  */
 public class ClientSettingsScreen extends Screen {
 
     private final Screen parent;
     private int currentPage = 0;
-    private static final String[] PAGES = {"G\u00f6r\u00fcn\u00fcm", "HUD", "Dans", "Bilgi"};
+    private static final String[] PAGES = {"G\u00f6r\u00fcn\u00fcm", "HUD", "Bilgi"};
 
     public ClientSettingsScreen(Screen parent) {
         super(Text.literal("PavClient Ayarlar\u0131"));
@@ -56,8 +55,7 @@ public class ClientSettingsScreen extends Screen {
         switch (currentPage) {
             case 0 -> initPageGorunum(cx, y0, bw, bh, gap, cfg);
             case 1 -> initPageHud(cx, y0, bw, bh, gap, cfg);
-            case 2 -> initPageDans(cx, y0, bw, bh, gap);
-            case 3 -> initPageBilgi(cx, y0, bw, bh, gap);
+            case 2 -> initPageBilgi(cx, y0, bw, bh, gap);
         }
 
         // Geri butonu
@@ -80,9 +78,18 @@ public class ClientSettingsScreen extends Screen {
                 btn -> { cfg.crosshairStyle = (cfg.crosshairStyle + 1) % stiller.length;
                     btn.setMessage(Text.literal("Ni\u015fan Stili: " + stiller[cfg.crosshairStyle % stiller.length])); PavConfig.save(); }));
 
-        addToggle(cx, y + gap * 2, w, h, "Blok Vurgulama", cfg.blockHighlight,
-                btn -> { cfg.blockHighlight = !cfg.blockHighlight;
-                    btn.setMessage(toggleText("Blok Vurgulama", cfg.blockHighlight)); PavConfig.save(); });
+        int rowY = y + gap * 2;
+        int toggleW = w - 34;
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, rowY, toggleW, h,
+                toggleText("Blok Vurgulama", cfg.blockHighlight),
+                btn -> {
+                    cfg.blockHighlight = !cfg.blockHighlight;
+                    btn.setMessage(toggleText("Blok Vurgulama", cfg.blockHighlight));
+                    PavConfig.save();
+                }));
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2 + toggleW + 4, rowY, 30, h,
+                Text.literal("..."),
+                btn -> { if (this.client != null) this.client.setScreen(new ModernBlockHighlightScreen(this)); }));
 
         addToggle(cx, y + gap * 3, w, h, "Kendi \u0130smini G\u00f6ster", cfg.showOwnName,
                 btn -> { cfg.showOwnName = !cfg.showOwnName;
@@ -118,25 +125,7 @@ public class ClientSettingsScreen extends Screen {
                 btn -> { if (this.client != null) this.client.setScreen(new HudEditScreen(this)); }));
     }
 
-    /** Sayfa 2: Dans/Emote */
-    private void initPageDans(int cx, int y, int w, int h, int gap) {
-        String[] names = EmoteManager.EMOTE_NAMES;
-        for (int i = 0; i < names.length; i++) {
-            final int emoteId = i;
-            this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + i * gap, w, h,
-                    Text.literal("\u25b6 " + names[i]),
-                    btn -> {
-                        EmoteManager.playEmote(emoteId);
-                        if (this.client != null) this.client.setScreen(null);
-                    }));
-        }
-
-        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y + names.length * gap + 8, w, h,
-                Text.literal("\u00a77PavClient kullananlar dansini g\u00f6r\u00fcr"),
-                btn -> {}));
-    }
-
-    /** Sayfa 3: Bilgi */
+    /** Sayfa 2: Bilgi */
     private void initPageBilgi(int cx, int y, int w, int h, int gap) {
         // Discord
         this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y, w, h,

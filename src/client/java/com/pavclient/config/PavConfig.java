@@ -35,6 +35,14 @@ public class PavConfig {
     // === Gorunum ===
     public boolean showOwnName = false;
     public boolean blockHighlight = true;
+    public boolean blockHighlightRgb = false;
+    public int blockHighlightRed = 124;
+    public int blockHighlightGreen = 77;
+    public int blockHighlightBlue = 255;
+    public float blockHighlightAlpha = 0.9f;
+    public float blockHighlightSize = 0.002f;
+    public boolean blockHighlightFill = false;
+    public float blockHighlightFillAlpha = 0.2f;
     public boolean realisticAnimations = false;
 
     // === Dans/Emote ===

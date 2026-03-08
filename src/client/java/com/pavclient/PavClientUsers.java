@@ -24,8 +24,17 @@ public final class PavClientUsers {
         if (mc != null && mc.player != null && playerName.equals(mc.player.getName().getString())) {
             return true;
         }
-        // Custom channel ile dogrulanmis kullanicilar
-        return PAV_USERS.contains(playerName);
+        // Custom channel ile dogrulanmis kullanicilar (prefix/tag pluginleri tolere et)
+        if (PAV_USERS.contains(playerName)) {
+            return true;
+        }
+        String lower = playerName.toLowerCase();
+        for (String known : PAV_USERS) {
+            if (lower.contains(known.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void addPavUser(String playerName) {

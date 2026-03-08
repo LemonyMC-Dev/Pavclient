@@ -30,17 +30,11 @@ public class ModernVideoScreen extends Screen {
         int gap = 26;
         int y = 50;
 
-        // Render Mesafesi
+        // Render Mesafesi (< >)
         int rd = settings.getViewDistance().getValue();
-        this.addDrawableChild(ModernButtonWidget.create(cx - bw / 2, y, bw, bh,
-                Text.literal("G\u00f6r\u00fc\u015f Mesafesi: " + rd),
-                btn -> {
-                    int nv = rd + 2;
-                    if (nv > 32) nv = 2;
-                    settings.getViewDistance().setValue(nv);
-                    settings.write();
-                    init();
-                }));
+        addStepper(cx, y, bw, bh, "G\u00f6r\u00fc\u015f Mesafesi", String.valueOf(rd),
+                () -> { int nv = rd - 2; if (nv < 2) nv = 32; settings.getViewDistance().setValue(nv); settings.write(); init(); },
+                () -> { int nv = rd + 2; if (nv > 32) nv = 2; settings.getViewDistance().setValue(nv); settings.write(); init(); });
 
         // Grafik Kalitesi
         GraphicsMode gm = settings.getGraphicsMode().getValue();
@@ -65,15 +59,22 @@ public class ModernVideoScreen extends Screen {
         // FPS Limiti
         int fps = settings.getMaxFps().getValue();
         String fpsText = fps >= 260 ? "S\u0131n\u0131rs\u0131z" : String.valueOf(fps);
-        this.addDrawableChild(ModernButtonWidget.create(cx - bw / 2, y + gap * 2, bw, bh,
-                Text.literal("FPS Limiti: " + fpsText),
-                btn -> {
-                    int nf = fps + 30;
-                    if (nf > 260) nf = 30;
+        addStepper(cx, y + gap * 2, bw, bh, "FPS Limiti", fpsText,
+                () -> {
+                    int nf = fps - 30;
+                    if (fps >= 260) nf = 240;
+                    if (nf < 30) nf = 260; // sınırsız
                     settings.getMaxFps().setValue(nf);
                     settings.write();
                     init();
-                }));
+                },
+                () -> {
+                    int nf = fps + 30;
+                    if (nf > 260) nf = 260; // sınırsız
+                    settings.getMaxFps().setValue(nf);
+                    settings.write();
+                    init();
+                });
 
         // VSync
         boolean vs = settings.getEnableVsync().getValue();
@@ -98,28 +99,29 @@ public class ModernVideoScreen extends Screen {
 
         // GUI Boyutu
         int gui = settings.getGuiScale().getValue();
-        this.addDrawableChild(ModernButtonWidget.create(cx - bw / 2, y + gap * 5, bw, bh,
-                Text.literal("GUI Boyutu: " + (gui == 0 ? "Otomatik" : String.valueOf(gui))),
-                btn -> {
+        addStepper(cx, y + gap * 5, bw, bh, "GUI Boyutu", (gui == 0 ? "Otomatik" : String.valueOf(gui)),
+                () -> {
+                    int ng = gui - 1;
+                    if (ng < 0) ng = 4;
+                    settings.getGuiScale().setValue(ng);
+                    if (this.client != null) this.client.onResolutionChanged();
+                    settings.write();
+                    init();
+                },
+                () -> {
                     int ng = gui + 1;
                     if (ng > 4) ng = 0;
                     settings.getGuiScale().setValue(ng);
                     if (this.client != null) this.client.onResolutionChanged();
                     settings.write();
                     init();
-                }));
+                });
 
         // FOV
         int fov = settings.getFov().getValue();
-        this.addDrawableChild(ModernButtonWidget.create(cx - bw / 2, y + gap * 6, bw, bh,
-                Text.literal("FOV: " + fov),
-                btn -> {
-                    int nfov = fov + 10;
-                    if (nfov > 110) nfov = 30;
-                    settings.getFov().setValue(nfov);
-                    settings.write();
-                    init();
-                }));
+        addStepper(cx, y + gap * 6, bw, bh, "FOV", String.valueOf(fov),
+                () -> { int nfov = fov - 5; if (nfov < 30) nfov = 110; settings.getFov().setValue(nfov); settings.write(); init(); },
+                () -> { int nfov = fov + 5; if (nfov > 110) nfov = 30; settings.getFov().setValue(nfov); settings.write(); init(); });
 
         // Bitti
         this.addDrawableChild(ModernButtonWidget.create(
@@ -141,4 +143,12 @@ public class ModernVideoScreen extends Screen {
 
     @Override
     public boolean shouldCloseOnEsc() { return true; }
+
+    private void addStepper(int cx, int y, int w, int h, String label, String value, Runnable onLeft, Runnable onRight) {
+        int side = 28;
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y, side, h, Text.literal("<"), b -> onLeft.run()));
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2 + side + 2, y, w - side * 2 - 4, h,
+                Text.literal(label + ": " + value), b -> {}));
+        this.addDrawableChild(ModernButtonWidget.create(cx + w / 2 - side, y, side, h, Text.literal(">"), b -> onRight.run()));
+    }
 }

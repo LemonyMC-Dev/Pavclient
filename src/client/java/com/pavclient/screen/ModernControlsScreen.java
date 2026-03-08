@@ -4,8 +4,6 @@ import com.pavclient.gui.GuiHelper;
 import com.pavclient.gui.ModernButtonWidget;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.option.KeybindsScreen;
-import net.minecraft.client.gui.screen.option.MouseOptionsScreen;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.text.Text;
 
@@ -31,16 +29,16 @@ public class ModernControlsScreen extends Screen {
         int gap = 28;
         int y = 60;
 
-        // Mouse Ayarlari
+        // Mouse Ayarlari (modern)
         this.addDrawableChild(ModernButtonWidget.create(cx - bw / 2, y, bw, bh,
                 Text.literal("\u25cb Mouse Ayarlar\u0131"),
-                btn -> { if (this.client != null) this.client.setScreen(new MouseOptionsScreen(this, this.settings)); }
+                btn -> { if (this.client != null) this.client.setScreen(new ModernMouseScreen(this, this.settings)); }
         ));
 
-        // Tus Atamalari
+        // Tus Atamalari (modern)
         this.addDrawableChild(ModernButtonWidget.create(cx - bw / 2, y + gap, bw, bh,
                 Text.literal("\u2328 Tu\u015f Atamalar\u0131"),
-                btn -> { if (this.client != null) this.client.setScreen(new KeybindsScreen(this, this.settings)); }
+                btn -> { if (this.client != null) this.client.setScreen(new ModernKeybindsScreen(this, this.settings)); }
         ));
 
         // Otomatik Atlama

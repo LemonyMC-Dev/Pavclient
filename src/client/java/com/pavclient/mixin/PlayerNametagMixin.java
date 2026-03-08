@@ -49,8 +49,7 @@ public class PlayerNametagMixin {
             MutableText prefix = Text.literal("\u03c1\u043c")
                     .setStyle(Style.EMPTY.withColor(0xCB7BEA))
                     .append(Text.literal(" | ").formatted(Formatting.GRAY));
-            MutableText name = Text.literal(rawName).formatted(Formatting.WHITE);
-            MutableText fullText = prefix.append(name);
+            MutableText fullText = prefix.append(text.copy());
 
             // Vanilla renderlamaya birak ama degistirilmis text ile - EntityRenderer bridge metodunu cagir
             // PlayerEntityRenderer -> super (LivingEntityRenderer -> EntityRenderer) renderLabelIfPresent

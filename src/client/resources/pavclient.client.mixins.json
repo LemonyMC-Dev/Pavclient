@@ -12,7 +12,8 @@
         "PlayerNametagMixin",
         "PlayerEntityRendererMixin",
         "OptionsScreenMixin",
-        "GameOptionsScreenMixin"
+        "GameOptionsScreenMixin",
+        "WorldRendererMixin"
     ],
     "injectors": {
         "defaultRequire": 1
