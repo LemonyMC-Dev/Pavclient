@@ -23,5 +23,10 @@ logs/
 .DS_Store
 Thumbs.db
 
+# Crash dumps
+hs_err_*.log
+hs_err_*.mdmp
+replay_*.log
+
 # Fabric
 remappedSrc/
