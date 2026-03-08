@@ -62,7 +62,8 @@ public class ModDownloader {
             new ModEntry("simple-voice-chat", "Simple Voice Chat"),
             new ModEntry("fabric-language-kotlin", "Fabric Language Kotlin"),
             new ModEntry("yacl", "YetAnotherConfigLib"),
-            new ModEntry("zoomify", "Zoomify")
+            new ModEntry("zoomify", "Zoomify"),
+            new ModEntry("not-enough-animations", "Not Enough Animations")
     );
 
     private final Path modsDir;
@@ -310,6 +311,7 @@ public class ModDownloader {
                 case "fabric-language-kotlin" -> "fabric-language-kotlin";
                 case "yacl" -> "yet-another-config";
                 case "zoomify" -> "zoomify";
+                case "not-enough-animations" -> "notenoughanimations";
                 default -> slug;
             };
         }

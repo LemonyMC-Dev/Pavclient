@@ -98,11 +98,9 @@ public abstract class GameMenuScreenMixin extends Screen {
 
         int cx = this.width / 2;
 
-        // Rainbow PavClient title - butonlarin ustunde yeterli bosluk birak
-        long time = System.currentTimeMillis();
-        int rgb = GuiHelper.getRainbowColor(time, 1.5f);
+        // Soft pastel PavClient title
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("\u25C6 PavClient \u25C6"), cx, this.height / 2 - 118, rgb);
+                Text.literal("\u25C6 PavClient \u25C6"), cx, this.height / 2 - 118, 0xFFB0BEC5);
 
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("v" + PavClient.CLIENT_VERSION + " \u2022 " + PavClient.TARGET_SERVER),
