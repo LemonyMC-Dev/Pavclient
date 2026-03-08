@@ -17,8 +17,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Mojang splash -> PavMC branded splash.
- * Gerçek reload progress'i gösterir.
- * Fade-out sırasında alpha'yı korur böylece overlay düzgün kapanır.
+ * Gercek reload progress'i gosterir.
+ * Fade-out sirasinda alpha'yi korur boylece overlay duzgun kapanir.
  */
 @Mixin(SplashOverlay.class)
 public class SplashOverlayMixin {
@@ -28,8 +28,17 @@ public class SplashOverlayMixin {
     @Shadow private long reloadCompleteTime;
     @Shadow private long reloadStartTime;
 
+    /** Splash'in aktif olup olmadigini diger mixin'lere bildirir */
+    @Unique
+    public static volatile boolean pavclient$splashActive = true;
+
     @Unique private static final long FADE_IN_MS = 500L;
     @Unique private static final long FADE_OUT_MS = 400L;
+
+    @Inject(method = "render", at = @At("HEAD"))
+    private void pavclient$markActive(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        pavclient$splashActive = true;
+    }
 
     @Inject(method = "render", at = @At("TAIL"))
     private void pavclient$drawOverMojang(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
@@ -38,41 +47,42 @@ public class SplashOverlayMixin {
         int h = mc.getWindow().getScaledHeight();
         long now = System.currentTimeMillis();
 
-        // Alpha hesapla: fade-in ve fade-out korunacak
+        // Alpha hesapla: fade-in ve fade-out
         float alpha = 1.0f;
 
         if (this.reloadCompleteTime > -1L) {
-            // Yükleme bitti, fade-out
+            // Yukleme bitti, fade-out
             float elapsed = (float)(now - this.reloadCompleteTime);
             alpha = 1.0f - Math.min(elapsed / FADE_OUT_MS, 1.0f);
+            if (alpha <= 0.01f) {
+                pavclient$splashActive = false;
+                return;
+            }
         } else if (this.reloadStartTime > -1L) {
             // Fade-in
             float elapsed = (float)(now - this.reloadStartTime);
             alpha = Math.min(elapsed / FADE_IN_MS, 1.0f);
         }
 
-        if (alpha <= 0.01f) return; // Tamamen şeffaf, çizme
-
-        int alphaInt = (int)(alpha * 255) & 0xFF;
+        int alphaInt = Math.max((int)(alpha * 255) & 0xFF, 4);
         int bgColor = (alphaInt << 24) | 0x0A0A14;
 
-        // Mojang'ın her şeyini kapat
+        // Mojang'in her seyini tamamen kapat - opak arka plan
         context.fill(0, 0, w, h, bgColor);
 
-        if (alpha < 0.1f) return; // Çok düşükse text çizme
+        if (alpha < 0.05f) return;
 
         // Mor glow
-        int glowAlpha = (int)(alpha * 0x22) & 0xFF;
+        int glowAlpha = Math.max((int)(alpha * 0x22) & 0xFF, 1);
         int glowColor = (glowAlpha << 24) | 0x7C4DFF;
         int glowX = w / 2 - 150;
         context.fillGradient(glowX, h / 2 - 80, glowX + 300, h / 2 + 80, glowColor, 0x00000000);
 
-        // PavMC - büyük, scale 3x
+        // PavMC - buyuk, scale 3x
         long ms = System.nanoTime() / 1_000_000L;
         float hue = (ms % 3000) / 3000.0f;
         int rgb = 0xFF000000 | GuiHelper.hsbToRgb(hue, 0.9f, 1.0f);
-        // Alpha'yı rgb'ye uygula
-        int textAlpha = Math.max(alphaInt, 4);
+        int textAlpha = alphaInt;
         rgb = (textAlpha << 24) | (rgb & 0x00FFFFFF);
 
         MatrixStack mat = context.getMatrices();
@@ -83,17 +93,17 @@ public class SplashOverlayMixin {
                 Text.literal("PavMC"), (int)(w / 2 / scale), (int)((h / 2 - 20) / scale), rgb);
         mat.pop();
 
-        // Alt yazı
+        // Alt yazi
         int subColor = (textAlpha << 24) | 0x9E9E9E;
         context.drawCenteredTextWithShadow(mc.textRenderer,
                 Text.literal("Y\u00fckleniyor..."), w / 2, h / 2 + 8, subColor);
 
-        // Gerçek progress bar
+        // Gercek progress bar
         float realProgress = this.progress;
         int barW = 200;
         int barX = w / 2 - barW / 2;
         int barY = h / 2 + 28;
-        int barBg = ((int)(alpha * 0x33) << 24) | 0xFFFFFF;
+        int barBg = (Math.max((int)(alpha * 0x33), 1) << 24) | 0xFFFFFF;
         context.fill(barX, barY, barX + barW, barY + 3, barBg);
 
         int fillW = (int)(barW * realProgress);
@@ -102,7 +112,7 @@ public class SplashOverlayMixin {
             context.fill(barX, barY, barX + fillW, barY + 3, barFg);
         }
 
-        // Yüzde göster
+        // Yuzde goster
         int pctColor = (textAlpha << 24) | 0x666666;
         context.drawCenteredTextWithShadow(mc.textRenderer,
                 Text.literal((int)(realProgress * 100) + "%"), w / 2, barY + 8, pctColor);

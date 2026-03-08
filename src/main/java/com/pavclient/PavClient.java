@@ -12,7 +12,7 @@ public class PavClient implements ModInitializer {
 
     public static final String MOD_ID = "pavclient";
     public static final String MOD_NAME = "PavClient";
-    public static final String CLIENT_VERSION = "4.1.0";
+    public static final String CLIENT_VERSION = "4.2.0";
     public static final String TARGET_SERVER = "oyna.pavmc.com";
     public static final int TARGET_PORT = 25565;
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_NAME);
