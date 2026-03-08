@@ -3,6 +3,7 @@ package com.pavclient.mixin;
 import com.pavclient.PavClient;
 import com.pavclient.PavClientMod;
 import com.pavclient.screen.InstallCompleteScreen;
+import com.pavclient.screen.InstallProgressScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
@@ -37,6 +38,13 @@ public class TitleScreenMixin {
 
         pavclient$handled = true;
         MinecraftClient client = MinecraftClient.getInstance();
+
+        // Still installing mods in background
+        if (PavClientMod.installInProgress) {
+            client.setScreen(new InstallProgressScreen());
+            ci.cancel();
+            return;
+        }
 
         // Check if restart is needed (new mods downloaded)
         if (PavClientMod.needsRestart) {

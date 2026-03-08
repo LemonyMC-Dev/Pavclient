@@ -73,6 +73,23 @@ public class ModDownloader {
         return newModsDownloaded.get();
     }
 
+    public boolean hasRequiredModsLocally() {
+        try {
+            Files.createDirectories(modsDir);
+        } catch (IOException e) {
+            return false;
+        }
+
+        removeSodium();
+
+        for (ModEntry mod : REQUIRED_MODS) {
+            if (!isModPresentLocally(mod)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public boolean downloadAllMods() {
         LOGGER.info("Starting automatic mod download...");
 
@@ -85,7 +102,7 @@ public class ModDownloader {
 
         removeSodium();
 
-        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+        ExecutorService executor = Executors.newFixedThreadPool(Math.min(3, REQUIRED_MODS.size()));
         List<CompletableFuture<Void>> futures = REQUIRED_MODS.stream()
                 .map(mod -> CompletableFuture.runAsync(() -> downloadMod(mod), executor))
                 .toList();
@@ -172,6 +189,17 @@ public class ModDownloader {
         }
     }
 
+    private boolean isModPresentLocally(ModEntry mod) {
+        try {
+            return Files.list(modsDir)
+                    .filter(p -> p.getFileName().toString().toLowerCase().endsWith(".jar"))
+                    .map(p -> p.getFileName().toString().toLowerCase())
+                    .anyMatch(name -> name.contains(mod.localKeyword()));
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     private JsonArray fetchVersions(String slug) throws IOException, InterruptedException {
         String encodedLoaders = URLEncoder.encode("[\"" + LOADER + "\"]", StandardCharsets.UTF_8);
         String encodedVersions = URLEncoder.encode("[\"" + GAME_VERSION + "\"]", StandardCharsets.UTF_8);
@@ -234,7 +262,14 @@ public class ModDownloader {
     private String computeSha512(Path file) {
         try {
             MessageDigest d = MessageDigest.getInstance("SHA-512");
-            return HexFormat.of().formatHex(d.digest(Files.readAllBytes(file)));
+            try (InputStream in = Files.newInputStream(file)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    d.update(buffer, 0, read);
+                }
+            }
+            return HexFormat.of().formatHex(d.digest());
         } catch (Exception e) {
             return "";
         }
@@ -252,5 +287,15 @@ public class ModDownloader {
         } catch (IOException ignored) {}
     }
 
-    private record ModEntry(String slug, String displayName) {}
+    private record ModEntry(String slug, String displayName) {
+        String localKeyword() {
+            return switch (slug) {
+                case "viafabricplus" -> "viafabricplus";
+                case "ferrite-core" -> "ferritecore";
+                case "cloth-config" -> "cloth-config";
+                case "modmenu" -> "modmenu";
+                default -> slug;
+            };
+        }
+    }
 }

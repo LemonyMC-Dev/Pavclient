@@ -20,6 +20,8 @@ public class PavClientMod implements ClientModInitializer {
 
     /** Flag set to true if new mods were downloaded and restart is needed */
     public static boolean needsRestart = false;
+    public static volatile boolean installInProgress = false;
+    public static volatile boolean installFinished = false;
 
     @Override
     public void onInitializeClient() {
@@ -28,14 +30,28 @@ public class PavClientMod implements ClientModInitializer {
         // Load config
         PavConfig.load();
 
-        // Download required mods
+        // Download required mods without blocking startup.
         Path modsDir = FabricLoader.getInstance().getGameDir().resolve("mods");
         ModDownloader downloader = new ModDownloader(modsDir);
-        boolean newMods = downloader.downloadAllMods();
 
-        if (newMods) {
-            LOGGER.info("[{}] New mods downloaded! Restart required.", PavClient.MOD_NAME);
-            needsRestart = true;
+        if (downloader.hasRequiredModsLocally()) {
+            LOGGER.info("[{}] Required mods already present locally. Skipping startup download.", PavClient.MOD_NAME);
+            installFinished = true;
+        } else {
+            installInProgress = true;
+            Thread installerThread = Thread.ofVirtual().name("pavclient-mod-installer").start(() -> {
+                try {
+                    boolean newMods = downloader.downloadAllMods();
+                    if (newMods) {
+                        LOGGER.info("[{}] New mods downloaded. Restart required.", PavClient.MOD_NAME);
+                        needsRestart = true;
+                    }
+                } finally {
+                    installInProgress = false;
+                    installFinished = true;
+                }
+            });
+            LOGGER.info("[{}] Started background installer thread: {}", PavClient.MOD_NAME, installerThread.getName());
         }
 
         // Register HUD renderer (RGB text, armor HUD, custom crosshair)
