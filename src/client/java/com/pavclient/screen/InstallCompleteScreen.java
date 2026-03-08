@@ -9,89 +9,64 @@ import net.minecraft.text.Text;
 
 /**
  * Shown after first-time mod installation.
- * "Gerekli modlar indirildi! Oyunu Yeniden Baslatin [Kurulum Basarili]"
- * + Kapat button
+ * Modern branded PavMC screen.
  */
 public class InstallCompleteScreen extends Screen {
 
     public InstallCompleteScreen() {
-        super(Text.literal("PavClient - Kurulum Basarili"));
+        super(Text.literal("PavClient - Kurulum Ba\u015far\u0131l\u0131"));
     }
 
     @Override
     protected void init() {
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
+        int cx = this.width / 2;
+        int cy = this.height / 2;
 
-        // "Oyunu Kapat" button (closes the game for restart)
         this.addDrawableChild(ModernButtonWidget.danger(
-                centerX - 100, centerY + 40, 200, 25,
+                cx - 110, cy + 45, 220, 28,
                 Text.literal("Oyunu Kapat"),
-                button -> {
-                    if (this.client != null) {
-                        this.client.scheduleStop();
-                    }
-                }
+                btn -> { if (this.client != null) this.client.scheduleStop(); }
         ));
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        GuiHelper.drawDarkOverlay(context, this.width, this.height);
+        // Custom PavMC branded background
+        GuiHelper.drawClientBackground(context, this.width, this.height);
 
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
+        int cx = this.width / 2;
+        int cy = this.height / 2;
 
         // Panel
-        GuiHelper.drawPanel(context, centerX - 160, centerY - 70, 320, 140);
+        GuiHelper.drawPanel(context, cx - 170, cy - 80, 340, 160);
 
-        // Title with rainbow effect
+        // Rainbow title
         long time = System.currentTimeMillis();
-        int rgbColor = GuiHelper.getRainbowColorSafe(time, 1.5f);
+        int rgb = GuiHelper.getRainbowColor(time, 1.5f);
 
-        context.drawCenteredTextWithShadow(
-                this.textRenderer,
-                Text.literal("PavClient"),
-                centerX, centerY - 55,
-                rgbColor
-        );
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("\u25C6 PavClient \u25C6"), cx, cy - 65, rgb);
 
-        // Success message
-        context.drawCenteredTextWithShadow(
-                this.textRenderer,
-                Text.literal("Gerekli modlar indirildi!"),
-                centerX, centerY - 30,
-                0xFF44FF44
-        );
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("Gerekli modlar ba\u015far\u0131yla indirildi!"), cx, cy - 38, 0xFF69F0AE);
 
-        context.drawCenteredTextWithShadow(
-                this.textRenderer,
-                Text.literal("Oyunu Yeniden Baslatin"),
-                centerX, centerY - 15,
-                0xFFFFFFFF
-        );
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("Oyunu yeniden ba\u015flat\u0131n"), cx, cy - 22, 0xFFE0E0E0);
 
-        // [Kurulum Basarili] badge
-        context.drawCenteredTextWithShadow(
-                this.textRenderer,
-                Text.literal("[Kurulum Basarili]"),
-                centerX, centerY + 5,
-                0xFF6C63FF
-        );
+        // Badge
+        int badgeW = this.textRenderer.getWidth("[ Kurulum Ba\u015far\u0131l\u0131 ]") + 12;
+        GuiHelper.drawBorder(context, cx - badgeW / 2, cy - 2, badgeW, 14, 0xFF7C4DFF);
+        context.fill(cx - badgeW / 2, cy - 2, cx + badgeW / 2, cy + 12, 0x447C4DFF);
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("[ Kurulum Ba\u015far\u0131l\u0131 ]"), cx, cy + 1, 0xFFB388FF);
 
         // Version
-        context.drawCenteredTextWithShadow(
-                this.textRenderer,
-                Text.literal("v" + PavClient.CLIENT_VERSION),
-                centerX, centerY + 20,
-                0x88FFFFFF
-        );
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("v" + PavClient.CLIENT_VERSION), cx, cy + 25, 0x66FFFFFF);
 
         super.render(context, mouseX, mouseY, delta);
     }
 
     @Override
-    public boolean shouldCloseOnEsc() {
-        return false;
-    }
+    public boolean shouldCloseOnEsc() { return false; }
 }

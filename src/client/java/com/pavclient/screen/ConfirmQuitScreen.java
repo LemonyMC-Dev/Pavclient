@@ -7,9 +7,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
 /**
- * Confirmation dialog: "Oyunu kapatmak istediginize emin misiniz?"
- * - Evet, Kapat (red)
- * - Iptal (default)
+ * "Oyunu kapatmak istedi\u011finize emin misiniz?"
  */
 public class ConfirmQuitScreen extends Screen {
 
@@ -22,62 +20,44 @@ public class ConfirmQuitScreen extends Screen {
 
     @Override
     protected void init() {
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
+        int cx = this.width / 2;
+        int cy = this.height / 2;
 
-        // "Evet, Kapat"
         this.addDrawableChild(ModernButtonWidget.danger(
-                centerX - 100, centerY + 10, 200, 25,
+                cx - 110, cy + 12, 220, 28,
                 Text.literal("Evet, Kapat"),
-                button -> {
-                    if (this.client != null) {
-                        this.client.scheduleStop();
-                    }
-                }
+                btn -> { if (this.client != null) this.client.scheduleStop(); }
         ));
 
-        // "Iptal"
         this.addDrawableChild(ModernButtonWidget.create(
-                centerX - 100, centerY + 42, 200, 25,
-                Text.literal("Iptal"),
-                button -> {
-                    if (this.client != null) {
-                        this.client.setScreen(parent);
-                    }
-                }
+                cx - 110, cy + 48, 220, 28,
+                Text.literal("\u0130ptal"),
+                btn -> { if (this.client != null) this.client.setScreen(parent); }
         ));
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        GuiHelper.drawDarkOverlay(context, this.width, this.height);
+        GuiHelper.drawClientBackground(context, this.width, this.height);
 
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
+        int cx = this.width / 2;
+        int cy = this.height / 2;
 
-        // Small panel
-        GuiHelper.drawPanel(context, centerX - 140, centerY - 40, 280, 120);
+        GuiHelper.drawPanel(context, cx - 150, cy - 45, 300, 130);
 
-        // Warning icon / text
-        context.drawCenteredTextWithShadow(
-                this.textRenderer,
-                Text.literal("Oyunu kapatmak istediginize"),
-                centerX, centerY - 25,
-                0xFFFFFFFF
-        );
+        // Warning icon
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("\u26A0"), cx, cy - 35, 0xFFFFD740);
 
-        context.drawCenteredTextWithShadow(
-                this.textRenderer,
-                Text.literal("emin misiniz?"),
-                centerX, centerY - 12,
-                0xFFFFAAAA
-        );
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("Oyunu kapatmak istedi\u011finize"), cx, cy - 20, 0xFFFFFFFF);
+
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("emin misiniz?"), cx, cy - 8, 0xFFFF8A80);
 
         super.render(context, mouseX, mouseY, delta);
     }
 
     @Override
-    public boolean shouldCloseOnEsc() {
-        return true;
-    }
+    public boolean shouldCloseOnEsc() { return true; }
 }

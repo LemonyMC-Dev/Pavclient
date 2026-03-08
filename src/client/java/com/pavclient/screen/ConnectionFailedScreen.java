@@ -11,68 +11,60 @@ import net.minecraft.client.network.ServerInfo;
 import net.minecraft.text.Text;
 
 /**
- * Custom connection failed screen for PavClient.
- * Only two options:
- * 1. "Yeniden Baglan" (Retry) - green button
- * 2. "Oyunu Kapat" (Close Game) - red button, with confirmation
+ * Connection failed screen.
+ * Only: "Yeniden Ba\u011flan" + "Oyunu Kapat" (with confirm).
  */
 public class ConnectionFailedScreen extends Screen {
 
     private final Text disconnectReason;
 
     public ConnectionFailedScreen(Text reason) {
-        super(Text.literal("PavClient - Baglanti Basarisiz"));
+        super(Text.literal("PavClient - Ba\u011flant\u0131 Ba\u015far\u0131s\u0131z"));
         this.disconnectReason = reason;
     }
 
     @Override
     protected void init() {
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
+        int cx = this.width / 2;
+        int cy = this.height / 2;
 
-        // "Yeniden Baglan" (Retry) - success green
         this.addDrawableChild(ModernButtonWidget.success(
-                centerX - 100, centerY + 15, 200, 25,
-                Text.literal("Yeniden Baglan"),
-                button -> reconnect()
+                cx - 110, cy + 18, 220, 28,
+                Text.literal("Yeniden Ba\u011flan"),
+                btn -> reconnect()
         ));
 
-        // "Oyunu Kapat" (Close) - danger red with confirmation
         this.addDrawableChild(ModernButtonWidget.danger(
-                centerX - 100, centerY + 48, 200, 25,
+                cx - 110, cy + 54, 220, 28,
                 Text.literal("Oyunu Kapat"),
-                button -> {
-                    if (this.client != null) {
-                        this.client.setScreen(new ConfirmQuitScreen(this));
-                    }
-                }
+                btn -> { if (this.client != null) this.client.setScreen(new ConfirmQuitScreen(this)); }
         ));
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        GuiHelper.drawDarkOverlay(context, this.width, this.height);
+        GuiHelper.drawClientBackground(context, this.width, this.height);
 
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
+        int cx = this.width / 2;
+        int cy = this.height / 2;
 
-        GuiHelper.drawPanel(context, centerX - 160, centerY - 65, 320, 150);
+        GuiHelper.drawPanel(context, cx - 170, cy - 70, 340, 160);
 
         long time = System.currentTimeMillis();
-        int rgbColor = GuiHelper.getRainbowColorSafe(time, 1.5f);
+        int rgb = GuiHelper.getRainbowColor(time, 1.5f);
 
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("PavClient"), centerX, centerY - 50, rgbColor);
+                Text.literal("\u25C6 PavClient \u25C6"), cx, cy - 55, rgb);
 
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("Sunucuya baglanilamadi!"), centerX, centerY - 32, 0xFFFF4444);
+                Text.literal("Sunucuya ba\u011flan\u0131lamad\u0131!"), cx, cy - 35, 0xFFFF5252);
 
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("Sunucu: " + PavClient.TARGET_SERVER), centerX, centerY - 18, 0xFFAAAAAA);
+                Text.literal("Sunucu: " + PavClient.TARGET_SERVER), cx, cy - 20, 0xFF9E9E9E);
 
         if (disconnectReason != null) {
             context.drawCenteredTextWithShadow(this.textRenderer,
-                    disconnectReason, centerX, centerY - 2, 0xFFFFAA00);
+                    disconnectReason, cx, cy - 4, 0xFFFFD740);
         }
 
         super.render(context, mouseX, mouseY, delta);
@@ -80,17 +72,12 @@ public class ConnectionFailedScreen extends Screen {
 
     private void reconnect() {
         if (this.client == null) return;
-
-        ServerInfo serverInfo = new ServerInfo(PavClient.MOD_NAME,
+        ServerInfo info = new ServerInfo(PavClient.MOD_NAME,
                 PavClient.TARGET_SERVER + ":" + PavClient.TARGET_PORT, ServerInfo.ServerType.OTHER);
-        ServerAddress serverAddress = ServerAddress.parse(
-                PavClient.TARGET_SERVER + ":" + PavClient.TARGET_PORT);
-
-        ConnectScreen.connect(this, this.client, serverAddress, serverInfo, false, null);
+        ServerAddress addr = ServerAddress.parse(PavClient.TARGET_SERVER + ":" + PavClient.TARGET_PORT);
+        ConnectScreen.connect(this, this.client, addr, info, false, null);
     }
 
     @Override
-    public boolean shouldCloseOnEsc() {
-        return false;
-    }
+    public boolean shouldCloseOnEsc() { return false; }
 }

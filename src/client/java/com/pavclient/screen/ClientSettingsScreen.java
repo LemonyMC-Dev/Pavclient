@@ -6,149 +6,110 @@ import com.pavclient.gui.GuiHelper;
 import com.pavclient.gui.ModernButtonWidget;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 
 /**
- * PavClient Settings Screen.
- * Accessible from ESC menu via "Client Ayarlari" button.
- *
- * Settings:
- * - RGB text on/off
- * - Armor HUD on/off
- * - Custom Crosshair on/off + style select
- * - Optimization info
+ * PavClient Ayarlar\u0131 ekran\u0131.
+ * T\u00fcm client \u00f6zellikleri burada a\u00e7\u0131l\u0131p kapat\u0131labilir.
  */
 public class ClientSettingsScreen extends Screen {
 
     private final Screen parent;
 
     public ClientSettingsScreen(Screen parent) {
-        super(Text.literal("PavClient Ayarlari"));
+        super(Text.literal("PavClient Ayarlar\u0131"));
         this.parent = parent;
     }
 
     @Override
     protected void init() {
-        PavConfig config = PavConfig.get();
-        int centerX = this.width / 2;
-        int startY = 55;
-        int buttonW = 240;
-        int buttonH = 22;
-        int spacing = 28;
+        PavConfig cfg = PavConfig.get();
+        int cx = this.width / 2;
+        int bw = 250;
+        int bh = 24;
+        int gap = 30;
+        int y0 = 60;
 
-        // RGB Text toggle
-        this.addDrawableChild(ModernButtonWidget.create(
-                centerX - buttonW / 2, startY, buttonW, buttonH,
-                Text.literal("RGB Yazi: " + (config.rgbTextEnabled ? "ACIK" : "KAPALI")),
-                button -> {
-                    config.rgbTextEnabled = !config.rgbTextEnabled;
-                    button.setMessage(Text.literal("RGB Yazi: " + (config.rgbTextEnabled ? "ACIK" : "KAPALI")));
-                    PavConfig.save();
-                }
-        ));
+        // RGB Yaz\u0131
+        addSetting(cx, y0, bw, bh,
+                "RGB Yaz\u0131: " + onOff(cfg.rgbTextEnabled),
+                btn -> { cfg.rgbTextEnabled = !cfg.rgbTextEnabled;
+                    btn.setMessage(Text.literal("RGB Yaz\u0131: " + onOff(cfg.rgbTextEnabled))); PavConfig.save(); });
 
-        // Armor HUD toggle
-        this.addDrawableChild(ModernButtonWidget.create(
-                centerX - buttonW / 2, startY + spacing, buttonW, buttonH,
-                Text.literal("Zirh HUD: " + (config.armorHudEnabled ? "ACIK" : "KAPALI")),
-                button -> {
-                    config.armorHudEnabled = !config.armorHudEnabled;
-                    button.setMessage(Text.literal("Zirh HUD: " + (config.armorHudEnabled ? "ACIK" : "KAPALI")));
-                    PavConfig.save();
-                }
-        ));
+        // Z\u0131rh HUD
+        addSetting(cx, y0 + gap, bw, bh,
+                "Z\u0131rh G\u00f6stergesi: " + onOff(cfg.armorHudEnabled),
+                btn -> { cfg.armorHudEnabled = !cfg.armorHudEnabled;
+                    btn.setMessage(Text.literal("Z\u0131rh G\u00f6stergesi: " + onOff(cfg.armorHudEnabled))); PavConfig.save(); });
 
-        // Armor HUD position toggle
-        this.addDrawableChild(ModernButtonWidget.create(
-                centerX - buttonW / 2, startY + spacing * 2, buttonW, buttonH,
-                Text.literal("Zirh HUD Pozisyon: " + (config.armorHudAnchorBottom ? "Sol Alt" : "Sol Ust")),
-                button -> {
-                    config.armorHudAnchorBottom = !config.armorHudAnchorBottom;
-                    button.setMessage(Text.literal("Zirh HUD Pozisyon: " + (config.armorHudAnchorBottom ? "Sol Alt" : "Sol Ust")));
-                    PavConfig.save();
-                }
-        ));
+        // Z\u0131rh pozisyon
+        addSetting(cx, y0 + gap * 2, bw, bh,
+                "Z\u0131rh Pozisyon: " + (cfg.armorHudAnchorBottom ? "Sol Alt" : "Sol \u00dcst"),
+                btn -> { cfg.armorHudAnchorBottom = !cfg.armorHudAnchorBottom;
+                    btn.setMessage(Text.literal("Z\u0131rh Pozisyon: " + (cfg.armorHudAnchorBottom ? "Sol Alt" : "Sol \u00dcst"))); PavConfig.save(); });
 
-        // Custom Crosshair toggle
-        this.addDrawableChild(ModernButtonWidget.create(
-                centerX - buttonW / 2, startY + spacing * 3, buttonW, buttonH,
-                Text.literal("Ozel Nisan: " + (config.customCrosshairEnabled ? "ACIK" : "KAPALI")),
-                button -> {
-                    config.customCrosshairEnabled = !config.customCrosshairEnabled;
-                    button.setMessage(Text.literal("Ozel Nisan: " + (config.customCrosshairEnabled ? "ACIK" : "KAPALI")));
-                    PavConfig.save();
-                }
-        ));
+        // \u00d6zel Ni\u015fan
+        addSetting(cx, y0 + gap * 3, bw, bh,
+                "\u00d6zel Ni\u015fan: " + onOff(cfg.customCrosshairEnabled),
+                btn -> { cfg.customCrosshairEnabled = !cfg.customCrosshairEnabled;
+                    btn.setMessage(Text.literal("\u00d6zel Ni\u015fan: " + onOff(cfg.customCrosshairEnabled))); PavConfig.save(); });
 
-        // Crosshair style
-        String[] styles = {"Plus", "Nokta", "Daire", "Ince Haç"};
-        this.addDrawableChild(ModernButtonWidget.create(
-                centerX - buttonW / 2, startY + spacing * 4, buttonW, buttonH,
-                Text.literal("Nisan Stili: " + styles[config.crosshairStyle % styles.length]),
-                button -> {
-                    config.crosshairStyle = (config.crosshairStyle + 1) % styles.length;
-                    button.setMessage(Text.literal("Nisan Stili: " + styles[config.crosshairStyle % styles.length]));
-                    PavConfig.save();
-                }
-        ));
+        // Ni\u015fan stili
+        String[] stiller = {"Art\u0131", "Nokta", "Daire", "\u0130nce Ha\u00e7"};
+        addSetting(cx, y0 + gap * 4, bw, bh,
+                "Ni\u015fan Stili: " + stiller[cfg.crosshairStyle % stiller.length],
+                btn -> { cfg.crosshairStyle = (cfg.crosshairStyle + 1) % stiller.length;
+                    btn.setMessage(Text.literal("Ni\u015fan Stili: " + stiller[cfg.crosshairStyle % stiller.length])); PavConfig.save(); });
 
-        // RGB speed
-        this.addDrawableChild(ModernButtonWidget.create(
-                centerX - buttonW / 2, startY + spacing * 5, buttonW, buttonH,
-                Text.literal("RGB Hizi: " + String.format("%.1f", config.rgbSpeed) + "x"),
-                button -> {
-                    config.rgbSpeed += 0.5f;
-                    if (config.rgbSpeed > 5.0f) config.rgbSpeed = 0.5f;
-                    button.setMessage(Text.literal("RGB Hizi: " + String.format("%.1f", config.rgbSpeed) + "x"));
-                    PavConfig.save();
-                }
-        ));
+        // RGB h\u0131z\u0131
+        addSetting(cx, y0 + gap * 5, bw, bh,
+                "RGB H\u0131z\u0131: " + String.format("%.1f", cfg.rgbSpeed) + "x",
+                btn -> { cfg.rgbSpeed += 0.5f; if (cfg.rgbSpeed > 5.0f) cfg.rgbSpeed = 0.5f;
+                    btn.setMessage(Text.literal("RGB H\u0131z\u0131: " + String.format("%.1f", cfg.rgbSpeed) + "x")); PavConfig.save(); });
 
-        // Optimization info (read-only status)
+        // Optimizasyon bilgi
         this.addDrawableChild(ModernButtonWidget.success(
-                centerX - buttonW / 2, startY + spacing * 6, buttonW, buttonH,
-                Text.literal("Optimizasyon: Lithium + FerriteCore AKTIF"),
-                button -> { /* read-only */ }
+                cx - bw / 2, y0 + gap * 6, bw, bh,
+                Text.literal("\u2714 Optimizasyon: Lithium + FerriteCore"),
+                btn -> {}
         ));
 
-        // Back button
+        // Geri
         this.addDrawableChild(ModernButtonWidget.create(
-                centerX - buttonW / 2, startY + spacing * 7 + 8, buttonW, buttonH,
-                Text.literal("Geri"),
-                button -> {
-                    if (this.client != null) {
-                        this.client.setScreen(parent);
-                    }
-                }
+                cx - bw / 2, y0 + gap * 7 + 10, bw, bh,
+                Text.literal("\u2190 Geri"),
+                btn -> { if (this.client != null) this.client.setScreen(parent); }
         ));
     }
 
+    private void addSetting(int cx, int y, int w, int h, String label, net.minecraft.client.gui.widget.ButtonWidget.PressAction action) {
+        this.addDrawableChild(ModernButtonWidget.create(cx - w / 2, y, w, h, Text.literal(label), action));
+    }
+
+    private String onOff(boolean v) { return v ? "\u00a7aA\u00c7IK" : "\u00a7cKAPALI"; }
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        GuiHelper.drawDarkOverlay(context, this.width, this.height);
+        GuiHelper.drawClientBackground(context, this.width, this.height);
 
-        int centerX = this.width / 2;
+        int cx = this.width / 2;
 
-        // Panel background
-        GuiHelper.drawPanel(context, centerX - 140, 20, 280, this.height - 40);
+        // Panel
+        GuiHelper.drawPanel(context, cx - 145, 22, 290, this.height - 44);
 
-        // Title with rainbow
+        // Rainbow title
         long time = System.currentTimeMillis();
-        int rgbColor = GuiHelper.getRainbowColorSafe(time, 1.5f);
+        int rgb = GuiHelper.getRainbowColor(time, 1.5f);
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("\u25C6 PavClient Ayarlar\u0131 \u25C6"), cx, 32, rgb);
 
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("PavClient Ayarlari"), centerX, 30, rgbColor);
-
-        // Version info
-        context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.literal("v" + PavClient.CLIENT_VERSION),
-                centerX, 42, 0x66FFFFFF);
+                Text.literal("v" + PavClient.CLIENT_VERSION), cx, 44, 0x55FFFFFF);
 
         super.render(context, mouseX, mouseY, delta);
     }
 
     @Override
-    public boolean shouldCloseOnEsc() {
-        return true;
-    }
+    public boolean shouldCloseOnEsc() { return true; }
 }
