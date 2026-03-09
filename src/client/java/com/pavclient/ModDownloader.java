@@ -254,7 +254,7 @@ public class ModDownloader {
                 return;
             }
 
-            JsonObject version = findBestVersion(versions);
+            JsonObject version = findBestVersion(mod, versions);
             if (version == null) {
                 LOGGER.warn("No release for {}", mod.displayName());
                 return;
@@ -370,7 +370,13 @@ public class ModDownloader {
         }
     }
 
-    private JsonObject findBestVersion(JsonArray versions) {
+    private JsonObject findBestVersion(ModEntry mod, JsonArray versions) {
+        // Mod-specific minimum version constraints
+        if ("fabric-language-kotlin".equals(mod.slug())) {
+            JsonObject best = findBestKotlinLanguageVersion(versions);
+            if (best != null) return best;
+        }
+
         for (JsonElement e : versions) {
             JsonObject v = e.getAsJsonObject();
             if ("release".equals(v.get("version_type").getAsString())) return v;
@@ -380,6 +386,56 @@ public class ModDownloader {
             if ("beta".equals(v.get("version_type").getAsString())) return v;
         }
         return versions.isEmpty() ? null : versions.get(0).getAsJsonObject();
+    }
+
+    /**
+     * Zoomify icin gereken min: fabric-language-kotlin >= 1.13.8+kotlin.2.3.0
+     * Bu metoda uygun release versiyonunu secer.
+     */
+    private JsonObject findBestKotlinLanguageVersion(JsonArray versions) {
+        JsonObject fallback = null;
+        for (JsonElement e : versions) {
+            JsonObject v = e.getAsJsonObject();
+            String type = v.get("version_type").getAsString();
+            String num = v.get("version_number").getAsString();
+
+            // once release sakla (fallback)
+            if (fallback == null && "release".equals(type)) {
+                fallback = v;
+            }
+
+            // Basit ama guvenli kontrol: kotlin.2.3.0 veya uzeri track
+            if ("release".equals(type) && isKotlin230OrHigher(num)) {
+                return v;
+            }
+        }
+        return fallback;
+    }
+
+    private boolean isKotlin230OrHigher(String versionNumber) {
+        // Orn: 1.13.8+kotlin.2.3.0
+        int k = versionNumber.indexOf("kotlin.");
+        if (k < 0) return false;
+        String tail = versionNumber.substring(k + "kotlin.".length());
+        String[] parts = tail.split("[^0-9]+", 4);
+        if (parts.length < 2) return false;
+
+        int major = parseIntSafe(parts, 0);
+        int minor = parseIntSafe(parts, 1);
+        int patch = parseIntSafe(parts, 2);
+
+        if (major != 2) return major > 2;
+        if (minor != 3) return minor > 3;
+        return patch >= 0;
+    }
+
+    private int parseIntSafe(String[] arr, int idx) {
+        if (idx >= arr.length || arr[idx] == null || arr[idx].isBlank()) return 0;
+        try {
+            return Integer.parseInt(arr[idx]);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private JsonObject findPrimaryFile(JsonArray files) {
