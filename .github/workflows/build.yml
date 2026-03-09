@@ -3,13 +3,13 @@ name: Build PavClient
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
-  release:
-    types: [ created ]
+  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -47,16 +47,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: PavClient
-          path: build/libs/pavclient-*.jar
+          path: build/libs/*-*.jar
           if-no-files-found: error
 
   release:
     name: Upload Release Assets
     needs: build
-    if: github.event_name == 'release'
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     
     steps:
       - name: Download artifact
@@ -66,6 +64,14 @@ jobs:
           path: artifacts/
 
       - name: Upload to Release
+        run: |
+          set -e
+          JAR_FILE=$(ls artifacts/*.jar | sed -n '1p')
+          cp "$JAR_FILE" artifacts/pavclient-latest.jar
+
+      - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/pavclient-*.jar
+          generate_release_notes: true
+          files: |
+            artifacts/*.jar
