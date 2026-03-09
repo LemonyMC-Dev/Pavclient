@@ -3,15 +3,21 @@ package com.pavclient;
 import com.pavclient.config.PavConfig;
 import com.pavclient.emote.EmoteManager;
 import com.pavclient.hud.HudRenderer;
+import com.pavclient.network.FriendsChannel;
 import com.pavclient.network.PavClientChannel;
+import com.pavclient.screen.FriendsMenuScreen;
+import com.pavclient.social.FriendManager;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
+import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -26,6 +32,7 @@ public class PavClientMod implements ClientModInitializer {
     public static boolean needsRestart = false;
     public static volatile boolean installInProgress = false;
     public static volatile boolean installFinished = false;
+    private static KeyBinding openFriendsKey;
 
     @Override
     public void onInitializeClient() {
@@ -33,6 +40,7 @@ public class PavClientMod implements ClientModInitializer {
 
         // Load config
         PavConfig.load();
+        FriendManager.load();
 
         // Download required mods without blocking startup.
         Path modsDir = FabricLoader.getInstance().getGameDir().resolve("mods");
@@ -60,6 +68,21 @@ public class PavClientMod implements ClientModInitializer {
 
         // PavClient network channel (PM | tag tespiti)
         PavClientChannel.register();
+        FriendsChannel.register();
+
+        // Friends menu keybind (H)
+        openFriendsKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.pavclient.friends_menu",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_H,
+                "key.categories.pavclient"
+        ));
+
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (openFriendsKey.wasPressed()) {
+                client.setScreen(new FriendsMenuScreen(client.currentScreen));
+            }
+        });
 
         // Emote/dans sistemi
         EmoteManager.init();
