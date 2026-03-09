@@ -22,9 +22,6 @@ import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -160,12 +157,21 @@ public class ModDownloader {
             LOGGER.info("Java 21 detected - skipping Discord RPC (requires Java 22+)");
         }
 
-        ExecutorService executor = Executors.newFixedThreadPool(Math.min(3, allMods.size()));
-        List<CompletableFuture<Void>> futures = allMods.stream()
-                .map(mod -> CompletableFuture.runAsync(() -> downloadMod(mod), executor))
-                .toList();
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-        executor.shutdown();
+        // KRITIK: dependency yarisi olmasin diye sirali indir.
+        // Aksi halde Zoomify indirildigi halde Kotlin inmezse bir sonraki acilista crash olur.
+        for (ModEntry mod : allMods) {
+            // Zoomify ancak deps varsa indir
+            if ("zoomify".equals(mod.slug())) {
+                boolean hasKotlin = isModPresentLocally(new ModEntry("fabric-language-kotlin", "Fabric Language Kotlin"));
+                boolean hasYacl = isModPresentLocally(new ModEntry("yacl", "YetAnotherConfigLib"));
+                if (!hasKotlin || !hasYacl) {
+                    LOGGER.warn("Skipping Zoomify because dependencies are missing (kotlin={}, yacl={})", hasKotlin, hasYacl);
+                    removeModBySlug("zoomify");
+                    continue;
+                }
+            }
+            downloadMod(mod);
+        }
 
         // Indirme sonrasi tekrar guvenlik kontrolu
         enforceModSecurity();
@@ -329,6 +335,17 @@ public class ModDownloader {
         try {
             Files.deleteIfExists(metaDir.resolve(slug + ".meta"));
         } catch (IOException ignored) {}
+    }
+
+    private void removeModBySlug(String slug) {
+        Path existing = findExistingByMeta(slug);
+        if (existing != null) {
+            try {
+                Files.deleteIfExists(existing);
+            } catch (IOException ignored) {
+            }
+        }
+        deleteMetaForSlug(slug);
     }
 
     private boolean isModPresentLocally(ModEntry mod) {
