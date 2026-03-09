@@ -3,6 +3,7 @@ package com.pavclient.mixin;
 import com.pavclient.PavClientUsers;
 import com.pavclient.config.PavConfig;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
@@ -34,6 +35,14 @@ public class PlayerNametagMixin {
 
         String rawName = (state.name != null && !state.name.isEmpty()) ? state.name : text.getString();
         boolean isSelf = state.id == mc.player.getId();
+        AbstractClientPlayerEntity renderedPlayer = null;
+        if (mc.world != null) {
+            var entity = mc.world.getEntityById(state.id);
+            if (entity instanceof AbstractClientPlayerEntity p) {
+                renderedPlayer = p;
+            }
+        }
+        java.util.UUID renderedUuid = renderedPlayer != null ? renderedPlayer.getUuid() : null;
 
         // Kendi ismini gosterme kapali ise cancel
         if (isSelf && !PavConfig.get().showOwnName) {
@@ -42,7 +51,7 @@ public class PlayerNametagMixin {
         }
 
         // PavClient kullanicilarina \u03c1\u043c | prefix ekle
-        if (isSelf || PavClientUsers.isPavUser(rawName)) {
+        if (isSelf || PavClientUsers.isPavUser(renderedUuid, rawName)) {
             ci.cancel();
 
             // \u03c1\u043c | prefix (yunan rho + kiril em = hos gorunum)
